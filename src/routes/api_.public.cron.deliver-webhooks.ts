@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Delivers due outbound webhooks (signed, with backoff). Protected by cronGuard (CRON_SECRET or LOVABLE_CRON_SECRET, constant-time). */
+/** Delivers due outbound webhooks (signed, with backoff). Protected by cronGuard (CRON_SECRET, constant-time). */
 async function handle(request: Request) {
   const { cronGuard } = await import("@/lib/cron-auth");
   const denied = await cronGuard(request);

@@ -26,10 +26,8 @@ const APPROVED_HOSTS: readonly string[] = [
   "www.rout.be",
   "app.dlp.li",
   "maximilien.brussels",
-  // Lovable preview/publish hosts: OAuth state cookies are set on the live
-  // host, so previews must be allowed to keep the callback on the same host.
-  "lovable.app",
-  "lovableproject.com",
+  // Lovable preview hosts: development builds only, never production.
+  ...((typeof process !== "undefined" && process.env?.["NODE_ENV"] === "development") ? ["lovable.app", "lovableproject.com"] : []),
 ];
 
 const LOCAL_HOSTS: readonly string[] = ["localhost", "127.0.0.1", "0.0.0.0"];

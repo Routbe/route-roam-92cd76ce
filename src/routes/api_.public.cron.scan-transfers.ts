@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 /**
  * Periodieke scan van openstaande overschrijvingen: houdt betalingen exact één
- * week open en verklaart ze daarna verlopen. Beveiligd met cronGuard (CRON_SECRET of LOVABLE_CRON_SECRET, constant-time).
+ * week open en verklaart ze daarna verlopen. Beveiligd met cronGuard (CRON_SECRET, constant-time).
  */
 async function handle(request: Request) {
   const { cronGuard } = await import("@/lib/cron-auth");

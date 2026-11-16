@@ -1,8 +1,9 @@
 /** Pure security-header rules (applied in src/start.ts, covered by tests). */
 
-/** Only rout.be and the Lovable editor may frame the app. */
+/** Only rout.be may frame the app; the Lovable editor only in development builds. */
 export const FRAME_ANCESTORS =
-  "frame-ancestors 'self' https://rout.be https://*.rout.be https://lovable.dev https://*.lovable.dev https://*.lovable.app https://*.lovableproject.com";
+  "frame-ancestors 'self' https://rout.be https://*.rout.be" +
+  ((typeof process !== "undefined" && process.env?.["NODE_ENV"] === "development") ? " https://lovable.dev https://*.lovable.dev https://*.lovable.app https://*.lovableproject.com" : "");
 
 /** Public OIDC endpoints — the only paths that may answer cross-origin. */
 export const PUBLIC_OIDC_PATHS = [

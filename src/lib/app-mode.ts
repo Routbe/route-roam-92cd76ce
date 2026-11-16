@@ -92,5 +92,5 @@ export function canSwitchShellMode(): boolean {
   if (isModeFixed() || typeof window === "undefined") return false;
   if (import.meta.env.DEV) return true;
   const h = window.location.hostname;
-  return h === "localhost" || h.endsWith(".lovable.app") || h.endsWith(".lovableproject.com");
+  return h === "localhost";
 }

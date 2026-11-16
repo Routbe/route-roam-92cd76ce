@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 /**
  * Achtergrond-sync van volgeraantallen (0-kost: open API's + OpenGraph).
- * Beveiligd met cronGuard (CRON_SECRET of LOVABLE_CRON_SECRET, constant-time).
+ * Beveiligd met cronGuard (CRON_SECRET, constant-time).
  */
 async function handle(request: Request) {
   const { cronGuard } = await import("@/lib/cron-auth");

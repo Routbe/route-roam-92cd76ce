@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 /**
  * Geautomatiseerde DNS-propagatiecontrole: promoot elk profiel met status
  * `pending_dns` waarvan `[handle].rout.be` naar cname.vercel-dns.com wijst.
- * Beveiligd met cronGuard (CRON_SECRET of LOVABLE_CRON_SECRET, constant-time).
+ * Beveiligd met cronGuard (CRON_SECRET, constant-time).
  */
 async function handle(request: Request) {
   const { cronGuard } = await import("@/lib/cron-auth");

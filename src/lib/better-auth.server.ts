@@ -403,8 +403,8 @@ export function createRoutAuth(request?: Request) {
       "http://localhost:8080",
       "http://localhost:*",
       "http://127.0.0.1:*",
-      "https://*.lovableproject.com",
-      "https://*.lovable.app",
+      // Lovable editor previews: development builds only, never production.
+      ...(process.env["NODE_ENV"] === "development" ? ["https://*.lovableproject.com", "https://*.lovable.app"] : []),
       // Both split deployments (rout.be public, rout.dlp.li admin) + configured base.
       "https://rout.dlp.li",
       "https://www.rout.be",

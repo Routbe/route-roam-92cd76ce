@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 /**
  * Dagelijkse sync van geverifieerde sociale accounts: vernieuwt gecachte
  * volgeraantallen en trekt de verificatie in wanneer de ROUT-link uit de bio is
- * verdwenen. Beveiligd met cronGuard (CRON_SECRET of LOVABLE_CRON_SECRET, constant-time).
+ * verdwenen. Beveiligd met cronGuard (CRON_SECRET, constant-time).
  */
 async function handle(request: Request) {
   const { cronGuard } = await import("@/lib/cron-auth");

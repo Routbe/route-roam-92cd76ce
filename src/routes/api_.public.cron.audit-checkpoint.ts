@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Daily signed audit checkpoint + 365-day retention. Protected by cronGuard (CRON_SECRET or LOVABLE_CRON_SECRET, constant-time). */
+/** Daily signed audit checkpoint + 365-day retention. Protected by cronGuard (CRON_SECRET, constant-time). */
 async function handle(request: Request) {
   const { cronGuard } = await import("@/lib/cron-auth");
   const denied = await cronGuard(request);

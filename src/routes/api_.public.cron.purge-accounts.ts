@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Daily purge of accounts whose 7-day grace period ended. Protected by cronGuard (CRON_SECRET or LOVABLE_CRON_SECRET, constant-time). */
+/** Daily purge of accounts whose 7-day grace period ended. Protected by cronGuard (CRON_SECRET, constant-time). */
 async function handle(request: Request) {
   const { cronGuard } = await import("@/lib/cron-auth");
   const denied = await cronGuard(request);
