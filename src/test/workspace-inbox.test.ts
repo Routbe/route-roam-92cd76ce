@@ -48,7 +48,7 @@ async function batch(userId: string, statements: { query: string; params: unknow
   await db.exec("begin; set local role rout_app;");
   try {
     await db.query("select set_config('rout.current_user_id', $1, true)", [userId]);
-    const out = [];
+    const out: Record<string, unknown>[][] = [];
     for (const s of statements) out.push((await db.query<Record<string, unknown>>(s.query, s.params)).rows);
     await db.exec("commit;");
     return out;
