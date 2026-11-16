@@ -281,7 +281,7 @@ Storage names are exactly those in "File storage (Scaleway)" above (`SCALEWAY_DE
 
 `bun run build` (`vite build`) uses only the standard TanStack Start, React, Tailwind and Nitro plugins and writes to `dist/`. No hosting provider is assumed.
 
-- **Own server / container (default, `NITRO_PRESET` unset = `node-server`):** `bun run build`, then `bun run start` or `node dist/server/index.mjs`. Every npm package is bundled into `dist/server`, so `dist/` runs alone on Node 22+ without `node_modules`. `PORT` (default 3000) and `HOST` set the listener; put TLS and the public domain on a reverse proxy and set `PUBLIC_ORIGIN` to that domain.
+- **Own server / container (default, `NITRO_PRESET` unset = `node-server`):** `bun run build`, then `bun run start` or `node dist/server/index.mjs`. Every npm package is bundled into `dist/server`, so `dist/` runs alone on Node 20.19+ or 22.12+ without `node_modules`. `PORT` (default 3000) and `HOST` set the listener; put TLS and the public domain on a reverse proxy and set `PUBLIC_ORIGIN` to that domain.
 - **Vercel:** `bun run build:vercel` (release-env check, then `NITRO_PRESET=vercel`).
 - **Other hosts:** `NITRO_PRESET=<preset> bun run build` for any Nitro preset.
 - **Runtime secrets on the app server:** `DATABASE_URL` (rout_app login; TLS is always enforced), `CRON_SECRET`, plus the service keys listed above. `MIGRATION_URL` belongs only where the admin scripts run, never on the app server.

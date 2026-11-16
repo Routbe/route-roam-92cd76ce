@@ -377,7 +377,7 @@ ROUT treats security as architecture, not as a feature. These guarantees are enf
 
 ### Prerequisites
 
-- **Bun ≥ 1.4** (the lockfile is `bun.lock`). Node 22+ works for tooling.
+- **Bun ≥ 1.4** (the lockfile is `bun.lock`). Node 20.19+ or 22.12+ works for tooling.
 - A **PostgreSQL database on Neon** (EU region recommended), with:
   - an **owner** credential for migrations only, and
   - a **runtime login** that is granted the `rout_app` role (not an owner, not `BYPASSRLS`).
@@ -632,7 +632,7 @@ The app builds with **Nitro**:
 
 | Target | How |
 |---|---|
-| **Own server / container** (default) | `bun run build`, then `bun run start` (= `node dist/server/index.mjs`). Every package is bundled into `dist/`, so the folder runs on its own with Node 22+; copy only `dist/` into the image. |
+| **Own server / container** (default) | `bun run build`, then `bun run start` (= `node dist/server/index.mjs`). Every package is bundled into `dist/`, so the folder runs on its own with Node 20.19+ or 22.12+; copy only `dist/` into the image. |
 | **Vercel** | `bun run build:vercel` (sets `NITRO_PRESET=vercel`). |
 | **Other hosts** | Any Nitro preset via `NITRO_PRESET=<preset> bun run build`. |
 | **Omni worker** | Separate Docker image on a persistent host (`worker/Dockerfile`). |
