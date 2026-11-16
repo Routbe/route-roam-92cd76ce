@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "build:vercel": "bun scripts/check-release-env.ts && NITRO_PRESET=vercel vite build",
     "preview": "vite preview",
+    "start": "node dist/server/index.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
