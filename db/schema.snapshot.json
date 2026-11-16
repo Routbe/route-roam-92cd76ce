@@ -1745,7 +1745,8 @@
         }
       ],
       "indexes": [
-        "CREATE INDEX account_merge_tickets_primary_idx ON public.account_merge_tickets USING btree (primary_user_id)"
+        "CREATE INDEX account_merge_tickets_primary_idx ON public.account_merge_tickets USING btree (primary_user_id)",
+        "CREATE INDEX account_merge_tickets_secondary_user_id_fkx ON public.account_merge_tickets USING btree (secondary_user_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -1901,7 +1902,9 @@
           "def": "PRIMARY KEY (token_hash)"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX admin_bootstrap_tokens_consumed_by_fkx ON public.admin_bootstrap_tokens USING btree (consumed_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -2048,6 +2051,7 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX admin_permissions_granted_by_fkx ON public.admin_permissions USING btree (granted_by)",
         "CREATE INDEX admin_permissions_user_idx ON public.admin_permissions USING btree (user_id)"
       ],
       "triggers": [],
@@ -2538,8 +2542,10 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX agent_workspace_claims_claimed_by_fkx ON public.agent_workspace_claims USING btree (claimed_by)",
         "CREATE INDEX agent_workspace_claims_open_expiry_idx ON public.agent_workspace_claims USING btree (expires_at) WHERE (claimed_at IS NULL)",
-        "CREATE INDEX agent_workspace_claims_open_requester_idx ON public.agent_workspace_claims USING btree (requested_by) WHERE (claimed_at IS NULL)"
+        "CREATE INDEX agent_workspace_claims_open_requester_idx ON public.agent_workspace_claims USING btree (requested_by) WHERE (claimed_at IS NULL)",
+        "CREATE INDEX agent_workspace_claims_sandbox_id_fkx ON public.agent_workspace_claims USING btree (sandbox_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -3139,7 +3145,9 @@
           "def": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX analytics_events_profile_id_fkx ON public.analytics_events USING btree (profile_id)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -5946,6 +5954,7 @@
       ],
       "indexes": [
         "CREATE INDEX booking_holds_client ON public.booking_holds USING btree (client_digest, expires_at)",
+        "CREATE INDEX booking_holds_event_type_id_fkx ON public.booking_holds USING btree (event_type_id)",
         "CREATE INDEX booking_holds_expiry ON public.booking_holds USING btree (expires_at)",
         "CREATE INDEX booking_holds_host_time ON public.booking_holds USING btree (host_user_id, block_start_utc)"
       ],
@@ -6691,6 +6700,7 @@
         "CREATE INDEX bookings_hold_expiry ON public.bookings USING btree (hold_expires_at) WHERE (status = ANY (ARRAY['held'::text, 'pending_payment'::text]))",
         "CREATE INDEX bookings_host_time ON public.bookings USING btree (host_user_id, start_utc)",
         "CREATE INDEX bookings_shared_slot ON public.bookings USING btree (event_type_id, start_utc) WHERE shared_slot",
+        "CREATE INDEX bookings_workspace_id_fkx ON public.bookings USING btree (workspace_id)",
         "CREATE UNIQUE INDEX bookings_booking_token_key ON public.bookings USING btree (booking_token)",
         "CREATE UNIQUE INDEX bookings_checkout ON public.bookings USING btree (stripe_checkout_session_id) WHERE (stripe_checkout_session_id IS NOT NULL)"
       ],
@@ -7499,7 +7509,8 @@
         }
       ],
       "indexes": [
-        "CREATE INDEX community_reviews_status_idx ON public.community_reviews USING btree (status, approved_at DESC)"
+        "CREATE INDEX community_reviews_status_idx ON public.community_reviews USING btree (status, approved_at DESC)",
+        "CREATE INDEX community_reviews_user_id_fkx ON public.community_reviews USING btree (user_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -8114,7 +8125,9 @@
           "def": "PRIMARY KEY (issuer_id, request_key)"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX credential_issue_requests_badge_id_fkx ON public.credential_issue_requests USING btree (badge_id)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -9252,7 +9265,9 @@
           "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX factory_card_inventory_user_id_fkx ON public.factory_card_inventory USING btree (user_id)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -9483,7 +9498,8 @@
         }
       ],
       "indexes": [
-        "CREATE INDEX feedback_forms_scope_idx ON public.feedback_forms USING btree (workspace_id, user_id, created_at)"
+        "CREATE INDEX feedback_forms_scope_idx ON public.feedback_forms USING btree (workspace_id, user_id, created_at)",
+        "CREATE INDEX feedback_forms_user_id_fkx ON public.feedback_forms USING btree (user_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -10996,6 +11012,7 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX identity_relays_connected_app_id_fkx ON public.identity_relays USING btree (connected_app_id)",
         "CREATE INDEX identity_relays_user ON public.identity_relays USING btree (user_id, status)"
       ],
       "triggers": [],
@@ -11089,7 +11106,9 @@
           "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX identity_verification_sessions_user_id_fkx ON public.identity_verification_sessions USING btree (user_id)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -12524,7 +12543,8 @@
       ],
       "indexes": [
         "CREATE INDEX oauth_access_family_idx ON public.oauth_access_tokens USING btree (family_id)",
-        "CREATE INDEX oauth_access_owner_idx ON public.oauth_access_tokens USING btree (user_id, client_id)"
+        "CREATE INDEX oauth_access_owner_idx ON public.oauth_access_tokens USING btree (user_id, client_id)",
+        "CREATE INDEX oauth_access_tokens_client_id_fkx ON public.oauth_access_tokens USING btree (client_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -13198,7 +13218,9 @@
           "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX oauth_clients_workspace_id_fkx ON public.oauth_clients USING btree (workspace_id)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -13865,7 +13887,8 @@
       ],
       "indexes": [
         "CREATE INDEX oauth_refresh_family_idx ON public.oauth_refresh_tokens USING btree (family_id)",
-        "CREATE INDEX oauth_refresh_owner_idx ON public.oauth_refresh_tokens USING btree (user_id, client_id)"
+        "CREATE INDEX oauth_refresh_owner_idx ON public.oauth_refresh_tokens USING btree (user_id, client_id)",
+        "CREATE INDEX oauth_refresh_tokens_client_id_fkx ON public.oauth_refresh_tokens USING btree (client_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -15659,7 +15682,9 @@
           "def": "FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX platform_feature_switches_updated_by_fkx ON public.platform_feature_switches USING btree (updated_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -15765,7 +15790,9 @@
           "def": "FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX platform_integration_switches_updated_by_fkx ON public.platform_integration_switches USING btree (updated_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -16637,7 +16664,8 @@
       ],
       "indexes": [
         "CREATE INDEX profile_events_binding_idx ON public.profile_events USING btree (profile_space, profile_handle, starts_at)",
-        "CREATE INDEX profile_events_scope_idx ON public.profile_events USING btree (workspace_id, user_id, starts_at)"
+        "CREATE INDEX profile_events_scope_idx ON public.profile_events USING btree (workspace_id, user_id, starts_at)",
+        "CREATE INDEX profile_events_user_id_fkx ON public.profile_events USING btree (user_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -19189,6 +19217,7 @@
       ],
       "indexes": [
         "CREATE INDEX qa_mute_actions_recipient_idx ON public.qa_mute_actions USING btree (recipient_id, created_at DESC)",
+        "CREATE INDEX qa_mute_actions_source_question_id_fkx ON public.qa_mute_actions USING btree (source_question_id)",
         "CREATE UNIQUE INDEX qa_mute_actions_source_key ON public.qa_mute_actions USING btree (recipient_id, source_question_id) WHERE (source_question_id IS NOT NULL)"
       ],
       "triggers": [],
@@ -19284,6 +19313,7 @@
       ],
       "indexes": [
         "CREATE INDEX qa_trust_charges_sender_time_idx ON public.qa_trust_charges USING btree (sender_key, charged_at DESC) WHERE (sender_key IS NOT NULL)",
+        "CREATE INDEX qa_trust_charges_sender_user_id_fkx ON public.qa_trust_charges USING btree (sender_user_id)",
         "CREATE UNIQUE INDEX qa_trust_charges_account ON public.qa_trust_charges USING btree (recipient_id, sender_user_id) WHERE (sender_user_id IS NOT NULL)",
         "CREATE UNIQUE INDEX qa_trust_charges_device ON public.qa_trust_charges USING btree (recipient_id, sender_key) WHERE (sender_key IS NOT NULL)"
       ],
@@ -19787,7 +19817,10 @@
           "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX reserved_brand_releases_released_by_fkx ON public.reserved_brand_releases USING btree (released_by)",
+        "CREATE INDEX reserved_brand_releases_user_id_fkx ON public.reserved_brand_releases USING btree (user_id)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -20101,7 +20134,9 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX rout_calendars_event_type_id_fkx ON public.rout_calendars USING btree (event_type_id)",
         "CREATE INDEX rout_calendars_user ON public.rout_calendars USING btree (user_id)",
+        "CREATE INDEX rout_calendars_workspace_id_fkx ON public.rout_calendars USING btree (workspace_id)",
         "CREATE UNIQUE INDEX rout_calendars_public_id ON public.rout_calendars USING btree (public_id)"
       ],
       "triggers": [],
@@ -20919,6 +20954,7 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX sepa_review_queue_decided_by_fkx ON public.sepa_review_queue USING btree (decided_by)",
         "CREATE INDEX sepa_review_queue_status_idx ON public.sepa_review_queue USING btree (status, created_at DESC)",
         "CREATE INDEX sepa_review_queue_user_idx ON public.sepa_review_queue USING btree (user_id)",
         "CREATE UNIQUE INDEX sepa_review_queue_open_payment_idx ON public.sepa_review_queue USING btree (payment_id) WHERE ((status = 'open'::text) AND (payment_id IS NOT NULL))"
@@ -21094,6 +21130,7 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX shadow_mutes_muted_sender_id_fkx ON public.shadow_mutes USING btree (muted_sender_id)",
         "CREATE INDEX shadow_mutes_recipient_account_idx ON public.shadow_mutes USING btree (recipient_id, muted_sender_id) WHERE (muted_sender_id IS NOT NULL)",
         "CREATE INDEX shadow_mutes_recipient_device_idx ON public.shadow_mutes USING btree (recipient_id, muted_sender_key) WHERE (muted_sender_key IS NOT NULL)",
         "CREATE INDEX shadow_mutes_recipient_space_key_idx ON public.shadow_mutes USING btree (recipient_id, space, muted_sender_key) WHERE (muted_sender_key IS NOT NULL)",
@@ -23082,7 +23119,9 @@
           "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX user_connected_apps_visibility_client_id_fkx ON public.user_connected_apps_visibility USING btree (client_id)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -23451,7 +23490,8 @@
         }
       ],
       "indexes": [
-        "CREATE INDEX encrypted_ledger_user_cursor ON public.user_encrypted_audit_logs USING btree (user_id, created_at DESC, id DESC)"
+        "CREATE INDEX encrypted_ledger_user_cursor ON public.user_encrypted_audit_logs USING btree (user_id, created_at DESC, id DESC)",
+        "CREATE INDEX user_encrypted_audit_logs_user_id_key_id_fkx ON public.user_encrypted_audit_logs USING btree (user_id, key_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -23569,6 +23609,7 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX user_feature_blocks_created_by_fkx ON public.user_feature_blocks USING btree (created_by)",
         "CREATE INDEX user_feature_blocks_user_idx ON public.user_feature_blocks USING btree (user_id)"
       ],
       "triggers": [],
@@ -25527,6 +25568,7 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX users_migrated_to_workspace_id_fkx ON public.users USING btree (migrated_to_workspace_id)",
         "CREATE INDEX users_sunset_idx ON public.users USING btree (sunset_at) WHERE (account_status = 'migrated_sunset'::text)",
         "CREATE UNIQUE INDEX users_auth_user_id_key ON public.users USING btree (auth_user_id) WHERE (auth_user_id IS NOT NULL)",
         "CREATE UNIQUE INDEX users_email_normalized_key ON public.users USING btree (email_normalized)"
@@ -26040,7 +26082,9 @@
           "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX wallet_passes_user_id_fkx ON public.wallet_passes USING btree (user_id)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -26434,7 +26478,8 @@
         }
       ],
       "indexes": [
-        "CREATE INDEX webhook_deliveries_due_idx ON public.webhook_deliveries USING btree (next_attempt_at) WHERE ((delivered_at IS NULL) AND (failed_at IS NULL))"
+        "CREATE INDEX webhook_deliveries_due_idx ON public.webhook_deliveries USING btree (next_attempt_at) WHERE ((delivered_at IS NULL) AND (failed_at IS NULL))",
+        "CREATE INDEX webhook_deliveries_endpoint_id_fkx ON public.webhook_deliveries USING btree (endpoint_id)"
       ],
       "triggers": [],
       "rls": true,
@@ -26765,7 +26810,9 @@
           "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX workspace_ask_settings_updated_by_fkx ON public.workspace_ask_settings USING btree (updated_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -26871,6 +26918,7 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX workspace_faq_items_published_by_fkx ON public.workspace_faq_items USING btree (published_by)",
         "CREATE INDEX workspace_faq_ws_idx ON public.workspace_faq_items USING btree (workspace_id, published_at DESC)"
       ],
       "triggers": [],
@@ -26982,6 +27030,8 @@
       ],
       "indexes": [
         "CREATE INDEX workspace_invites_email_idx ON public.workspace_invites USING btree (lower(email)) WHERE (status = 'pending'::text)",
+        "CREATE INDEX workspace_invites_invited_by_fkx ON public.workspace_invites USING btree (invited_by)",
+        "CREATE INDEX workspace_invites_invited_user_id_fkx ON public.workspace_invites USING btree (invited_user_id)",
         "CREATE UNIQUE INDEX workspace_invites_open_idx ON public.workspace_invites USING btree (workspace_id, lower(email)) WHERE (status = 'pending'::text)",
         "CREATE UNIQUE INDEX workspace_invites_open_member_idx ON public.workspace_invites USING btree (workspace_id, invited_user_id) WHERE ((status = 'pending'::text) AND (invited_user_id IS NOT NULL))"
       ],
@@ -27116,6 +27166,7 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX workspace_keys_created_by_fkx ON public.workspace_keys USING btree (created_by)",
         "CREATE UNIQUE INDEX workspace_keys_one_active_idx ON public.workspace_keys USING btree (workspace_id) WHERE (status = 'active'::text)"
       ],
       "triggers": [],
@@ -27470,7 +27521,9 @@
           "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX workspace_profile_drafts_updated_by_fkx ON public.workspace_profile_drafts USING btree (updated_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -27623,7 +27676,9 @@
           "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX workspace_psp_credentials_saved_by_fkx ON public.workspace_psp_credentials USING btree (saved_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -27707,7 +27762,9 @@
           "def": "FOREIGN KEY (replied_by) REFERENCES users(id) ON DELETE SET NULL"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX workspace_question_replies_replied_by_fkx ON public.workspace_question_replies USING btree (replied_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -28096,7 +28153,9 @@
           "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX workspace_social_links_created_by_fkx ON public.workspace_social_links USING btree (created_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -28266,7 +28325,9 @@
           "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX workspace_tip_settings_updated_by_fkx ON public.workspace_tip_settings USING btree (updated_by)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -28429,6 +28490,8 @@
       ],
       "indexes": [
         "CREATE INDEX workspace_transfers_email_idx ON public.workspace_transfers USING btree (lower(target_email)) WHERE (status = ANY (ARRAY['pending'::text, 'otp_ok'::text]))",
+        "CREATE INDEX workspace_transfers_target_user_id_fkx ON public.workspace_transfers USING btree (target_user_id)",
+        "CREATE INDEX workspace_transfers_workspace_id_fkx ON public.workspace_transfers USING btree (workspace_id)",
         "CREATE UNIQUE INDEX workspace_transfers_open_idx ON public.workspace_transfers USING btree (source_user_id) WHERE (status = ANY (ARRAY['pending'::text, 'otp_ok'::text, 'accepted'::text]))"
       ],
       "triggers": [],
@@ -28707,7 +28770,9 @@
           "def": "UNIQUE (slug)"
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX workspaces_legacy_user_id_fkx ON public.workspaces USING btree (legacy_user_id)"
+      ],
       "triggers": [
         "CREATE TRIGGER workspaces_slug_suffix BEFORE INSERT OR UPDATE OF slug, plan ON public.workspaces FOR EACH ROW EXECUTE FUNCTION enforce_workspace_slug_suffix()"
       ],
