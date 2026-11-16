@@ -99,7 +99,7 @@ export async function runQuery(query: string, params: unknown[] = []): Promise<G
   return result;
 }
 
-/** One gateway request is one PostgreSQL transaction, never an interactive callback. */
+/** One request is one PostgreSQL transaction, never an interactive callback. */
 export async function runBatch(
   input: Statement[],
   opts: { withContext?: boolean; isolation?: "Serializable" } = {},
@@ -121,14 +121,15 @@ export async function runBatch(
   try {
     // The atomic role/context/guard prefix runs first; an owner URL never queries as the owner.
     const db = client(connectionString);
-    const results = await db.begin(opts.isolation ? "isolation level serializable" : "", async (tx) => {
+    const work = async (tx: postgres.TransactionSql) => {
       const out: GatewayResult[] = [];
       for (const s of queries) {
         const r = await tx.unsafe(s.query, s.params as never[]);
         out.push({ rows: [...r] as Row[], rowCount: r.count ?? null, command: String(r.command ?? "") });
       }
       return out;
-    });
+    };
+    const results = opts.isolation ? await db.begin("isolation level serializable", work) : await db.begin(work);
     json = { results: results as GatewayResult[] };
   } catch (cause) {
     const code = (cause as { code?: unknown })?.code;
