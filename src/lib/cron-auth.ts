@@ -1,7 +1,6 @@
 /**
  * Scheduler authentication for /api/public/cron/* (server-only use).
- * Accepts CRON_SECRET (Vercel sends `Authorization: Bearer $CRON_SECRET`) or
- * LOVABLE_CRON_SECRET, from a header only — never a URL, which ends up in logs.
+ * Accepts CRON_SECRET (Vercel sends `Authorization: Bearer $CRON_SECRET`) from a header only — never a URL, which ends up in logs.
  * Comparison is constant-time over SHA-256 digests.
  */
 async function digest(value: string): Promise<Uint8Array> {
@@ -15,7 +14,7 @@ function equal(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 export function cronSecrets(env: Record<string, string | undefined> = process.env): string[] {
-  return [env["CRON_SECRET"], env["LOVABLE_CRON_SECRET"]].filter((s): s is string => typeof s === "string" && s.length > 0);
+  return [env["CRON_SECRET"]].filter((s): s is string => typeof s === "string" && s.length > 0);
 }
 
 /** null = authorised; otherwise the Response to return (503 unconfigured, 401 wrong/missing). */

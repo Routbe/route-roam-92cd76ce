@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Ruimt verlopen Asset Manager-bestanden op (Scaleway + Neon). Header: CRON_SECRET of LOVABLE_CRON_SECRET. */
+/** Ruimt verlopen Asset Manager-bestanden op (Scaleway + Neon). Header: CRON_SECRET. */
 async function handle(request: Request) {
   const { cronGuard } = await import("@/lib/cron-auth");
   const denied = await cronGuard(request);

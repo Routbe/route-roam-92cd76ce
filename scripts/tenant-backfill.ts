@@ -70,27 +70,20 @@ async function main() {
   let q: Q, close: () => Promise<void>;
   if (gateway) {
     if (apply) throw new Error("--gateway is read-only; --apply is refused");
-    const key = process.env.LOVABLE_API_KEY, conn = process.env.NEON_API_KEY;
-    if (!key || !conn) throw new Error("LOVABLE_API_KEY and NEON_API_KEY are required for --gateway");
+    const { sqlRequest, closeDirect } = await import("./db-direct");
     q = async (s, p) => {
       if (!READ_ONLY.test(s)) throw new Error("refused: not a read-only statement");
-      const res = await fetch("https://connector-gateway.lovable.dev/neon/sql", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "X-Connection-Api-Key": conn, "Content-Type": "application/json" },
-        body: JSON.stringify({ query: `begin read only; ${s}`.replace(/^begin read only; /, ""), params: p ?? [] }),
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error(`${res.status}: ${text.slice(0, 300)}`);
-      return (JSON.parse(text) as { rows: Record<string, unknown>[] }).rows;
+      const { results } = await sqlRequest({ queries: [{ query: s, params: p ?? [] }] }, { readOnly: true });
+      return results[0]!.rows;
     };
-    close = async () => {};
+    close = closeDirect;
   } else if (urlEnv) {
     const url = process.env[urlEnv];
     if (!url) throw new Error(`${urlEnv} is not set`);
-    const { Pool } = await import("@neondatabase/serverless");
-    const pool = new Pool({ connectionString: url });
-    q = async (s, p) => (await pool.query(s, p as unknown[])).rows;
-    close = () => pool.end();
+    const { default: postgres } = await import("postgres");
+    const pg = postgres(url, { ssl: "require", max: 1, prepare: false });
+    q = async (s, p) => [...(await pg.unsafe(s, (p ?? []) as never[]))] as Record<string, unknown>[];
+    close = () => pg.end();
   } else {
     const { replayDb } = await import("./formal-rls/replay");
     const db = await replayDb();

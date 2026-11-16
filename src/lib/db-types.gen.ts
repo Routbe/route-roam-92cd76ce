@@ -2503,6 +2503,23 @@ export interface PublicWebhookEventsRow {
   "http_status": number | null;
 }
 
+export interface PublicWorkspaceAskSettingsRow {
+  "workspace_id": string;
+  "enabled": boolean;
+  "updated_by": string | null;
+  "updated_at": string | Date;
+}
+
+export interface PublicWorkspaceFaqItemsRow {
+  "id": string;
+  "workspace_id": string;
+  "question_id": string;
+  "question_text": string;
+  "answer_text": string;
+  "published_by": string | null;
+  "published_at": string | Date;
+}
+
 export interface PublicWorkspaceInvitesRow {
   "id": string;
   "workspace_id": string;
@@ -2512,6 +2529,27 @@ export interface PublicWorkspaceInvitesRow {
   "status": string;
   "created_at": string | Date;
   "invited_user_id": string | null;
+}
+
+export interface PublicWorkspaceKeysRow {
+  "workspace_id": string;
+  "epoch": number;
+  "public_key": string;
+  "kid": string;
+  "status": string;
+  "created_by": string | null;
+  "created_at": string | Date;
+  "retired_at": string | Date | null;
+}
+
+export interface PublicWorkspaceMemberKeysRow {
+  "workspace_id": string;
+  "epoch": number;
+  "member_user_id": string;
+  "member_ref": string;
+  "kid": string;
+  "envelope": string;
+  "created_at": string | Date;
 }
 
 export interface PublicWorkspaceMembersRow {
@@ -2542,6 +2580,30 @@ export interface PublicWorkspacePspCredentialsRow {
   "publishable_key": string | null;
   "saved_by": string | null;
   "verified_at": string | Date;
+}
+
+export interface PublicWorkspaceQuestionRepliesRow {
+  "question_id": string;
+  "envelope": string;
+  "blake3_payload_hash": Uint8Array;
+  "replied_by": string | null;
+  "created_at": string | Date;
+}
+
+export interface PublicWorkspaceQuestionsRow {
+  "id": string;
+  "workspace_id": string;
+  "epoch": number;
+  "payload_id": string;
+  "envelope": string;
+  "blake3_payload_hash": Uint8Array;
+  "pow_nonce": string;
+  "epoch_bucket": number;
+  "guest_public_key": string;
+  "token_hash": Uint8Array;
+  "status": string;
+  "created_at": string | Date;
+  "answered_at": string | Date | null;
 }
 
 export interface PublicWorkspaceRootAliasesRow {
@@ -2844,10 +2906,16 @@ export interface DbTables {
   "public.webhook_deliveries": PublicWebhookDeliveriesRow;
   "public.webhook_endpoints": PublicWebhookEndpointsRow;
   "public.webhook_events": PublicWebhookEventsRow;
+  "public.workspace_ask_settings": PublicWorkspaceAskSettingsRow;
+  "public.workspace_faq_items": PublicWorkspaceFaqItemsRow;
   "public.workspace_invites": PublicWorkspaceInvitesRow;
+  "public.workspace_keys": PublicWorkspaceKeysRow;
+  "public.workspace_member_keys": PublicWorkspaceMemberKeysRow;
   "public.workspace_members": PublicWorkspaceMembersRow;
   "public.workspace_profile_drafts": PublicWorkspaceProfileDraftsRow;
   "public.workspace_psp_credentials": PublicWorkspacePspCredentialsRow;
+  "public.workspace_question_replies": PublicWorkspaceQuestionRepliesRow;
+  "public.workspace_questions": PublicWorkspaceQuestionsRow;
   "public.workspace_root_aliases": PublicWorkspaceRootAliasesRow;
   "public.workspace_social_links": PublicWorkspaceSocialLinksRow;
   "public.workspace_tip_settings": PublicWorkspaceTipSettingsRow;

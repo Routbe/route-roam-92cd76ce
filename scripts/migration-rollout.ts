@@ -1,7 +1,7 @@
 /**
- * One-transaction rollout of a single db/ migration through the Neon gateway
- * batch endpoint (`{ queries: [...] }` = one transaction), for when the owner
- * gives a GO for exactly one file and the agent applies it from chat.
+ * One-transaction rollout of a single db/ migration over a direct TLS
+ * connection (MIGRATION_URL, owner login): the batch runs in ONE transaction,
+ * for when the owner gives a GO for exactly one file.
  *
  * Unlike migrate-gateway.ts the file is NOT split client-side: its exact text
  * travels as one parameter, is hashed inside the transaction and only executed
@@ -10,7 +10,8 @@
  * runs, and the schema_migrations row records exactly the text that ran. The
  * SECURITY DEFINER guard runs afterwards in the same transaction.
  *
- *   bun scripts/migration-rollout.ts <file> --after=<previous file> [--out=<json>]
+ *   bun scripts/migration-rollout.ts <file> --after=<previous file> [--out=<json>] [--apply]
+ *   (without --apply it only prints the checksum and optionally writes the batch)
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -69,4 +70,13 @@ if (import.meta.main) {
   const json = asciiJson({ queries: rolloutBatch(file, after, body) });
   if (out) writeFileSync(out, json);
   console.log(`${file}: sha256 ${checksumOf(body)}, ${body.length} chars, batch ${json.length} bytes${out ? ` -> ${out}` : ""}`);
+  if (process.argv.includes("--apply")) {
+    const { sqlRequest, closeDirect } = await import("./db-direct");
+    try {
+      const { results } = await sqlRequest({ queries: rolloutBatch(file, after, body) });
+      console.log(`applied: ${JSON.stringify(results.at(-2)?.rows ?? [])}`);
+    } finally {
+      await closeDirect();
+    }
+  }
 }

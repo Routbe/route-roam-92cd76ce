@@ -23,7 +23,6 @@ import appCss from "../styles.css?url";
 import workSans400 from "@fontsource/work-sans/files/work-sans-latin-400-normal.woff2?url";
 import instrumentSerif400 from "@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2?url";
 import jetbrainsMono400 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { BOOT_SCRIPT, DEFAULT_UI_PREFERENCES, isInternalInterface } from "@/lib/internal-interface-theme";
 import { readRequestUiPreferences } from "@/lib/ui-preferences-request";
@@ -89,9 +88,6 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const [stale] = useState(() => willAutoReload(error));
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   if (stale) return <StaleChunkReload error={error} />;
   return (

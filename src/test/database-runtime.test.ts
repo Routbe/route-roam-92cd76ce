@@ -1,25 +1,38 @@
 // @vitest-environment node
 import { afterEach, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ neon: vi.fn(), transaction: vi.fn(), query: vi.fn() }));
-vi.mock("@neondatabase/serverless", () => ({ neon: mocks.neon }));
+const mocks = vi.hoisted(() => ({ postgres: vi.fn(), begin: vi.fn(), unsafe: vi.fn() }));
+vi.mock("postgres", () => ({ default: mocks.postgres }));
 import { databaseTransport, runBatch, withDbContext } from "@/lib/neon";
 afterEach(() => { vi.unstubAllEnvs(); vi.clearAllMocks(); });
-it("reads DATABASE_URL after import and preserves the atomic security prefix", async () => {
-  vi.stubEnv("NEON_API_KEY", ""); vi.stubEnv("LOVABLE_API_KEY", "");
+
+function fakeDriver() {
+  mocks.unsafe.mockImplementation(async (query: string) => Object.assign(query === "select true as ok" ? [{ ok: true }] : [], { count: 1, command: "SELECT" }));
+  mocks.begin.mockImplementation(async (a: unknown, b?: unknown) => (typeof a === "function" ? a : b as (tx: unknown) => unknown)({ unsafe: mocks.unsafe }));
+  mocks.postgres.mockReturnValue({ begin: mocks.begin, unsafe: mocks.unsafe, end: vi.fn() });
+}
+
+it("reads DATABASE_URL after import, enforces TLS and preserves the atomic security prefix", async () => {
   vi.stubEnv("DATABASE_URL", "postgresql://runtime:secret@ep-test.neon.tech/db");
-  mocks.query.mockImplementation((query, params) => ({ query, params }));
-  mocks.transaction.mockResolvedValue(Array.from({ length: 4 }, (_, i) => ({ rows: i === 3 ? [{ ok: true }] : [], rowCount: 1, command: "SELECT" })));
-  mocks.neon.mockReturnValue({ query: mocks.query, transaction: mocks.transaction });
+  fakeDriver();
   expect(databaseTransport()).toBe("direct");
   const result = await withDbContext({ userId: "11111111-1111-4111-8111-111111111111", workspaceId: null }, () => runBatch([{ query: "select true as ok", params: [] }]));
-  expect(mocks.neon).toHaveBeenCalledWith("postgresql://runtime:secret@ep-test.neon.tech/db", { fullResults: true });
-  expect(mocks.query.mock.calls[0]?.[0]).toBe("set local role rout_app");
-  expect(mocks.query.mock.calls[1]?.[0]).toContain("set_config");
-  expect(mocks.query.mock.calls[2]?.[0]).toContain("runtime_role_unsafe");
+  expect(mocks.postgres).toHaveBeenCalledWith("postgresql://runtime:secret@ep-test.neon.tech/db", expect.objectContaining({ ssl: "require" }));
+  expect(mocks.begin).toHaveBeenCalledTimes(1);
+  expect(mocks.unsafe.mock.calls[0]?.[0]).toBe("set local role rout_app");
+  expect(mocks.unsafe.mock.calls[1]?.[0]).toContain("set_config");
+  expect(mocks.unsafe.mock.calls[2]?.[0]).toContain("runtime_role_unsafe");
   expect(result[0]?.rows).toEqual([{ ok: true }]);
 });
-it("prefers the linked gateway when both credentials exist", () => {
+
+it("ignores Lovable connector keys: without DATABASE_URL there is no database", () => {
+  vi.stubEnv("DATABASE_URL", "");
   vi.stubEnv("NEON_API_KEY", "test"); vi.stubEnv("LOVABLE_API_KEY", "test");
-  vi.stubEnv("DATABASE_URL", "postgresql://test.neon.tech/db");
-  expect(databaseTransport()).toBe("gateway");
+  expect(databaseTransport()).toBe("none");
+});
+
+it("runs serializable batches with the isolation level on BEGIN", async () => {
+  vi.stubEnv("DATABASE_URL", "postgresql://runtime:secret@ep-test2.neon.tech/db");
+  fakeDriver();
+  await runBatch([{ query: "select true as ok", params: [] }], { isolation: "Serializable" });
+  expect(mocks.begin.mock.calls[0]?.[0]).toBe("isolation level serializable");
 });

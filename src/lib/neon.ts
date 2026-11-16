@@ -1,6 +1,6 @@
 /**
- * Server-only Neon access through the linked gateway or runtime DATABASE_URL.
- * Both paths read credentials per request and use identical guarded SQL batches.
+ * Server-only Postgres access over the runtime DATABASE_URL only, through the
+ * standard PostgreSQL wire protocol with TLS enforced. No vendor proxy.
  *
  * `sql` mimics the @neondatabase/serverless HTTP client surface used across the
  * app: tagged templates, `sql.query(text, params)`, `sql.unsafe(raw)` and
@@ -8,7 +8,7 @@
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { neon as directNeon } from "@neondatabase/serverless";
+import postgres from "postgres";
 import { contextStatements, type DbContext } from "@/lib/db-context";
 import { GENERIC_TEMPORARY_ERROR } from "@/lib/security/safe-errors";
 
@@ -31,8 +31,6 @@ function activeContext(): Statement[] {
   return ctx ? contextStatements(ctx) : [];
 }
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/neon/sql";
-
 type Row = Record<string, unknown>;
 type Statement = { query: string; params: unknown[] };
 type GatewayResult = { rows: Row[]; rowCount: number | null; command: string };
@@ -41,8 +39,7 @@ type GatewayResult = { rows: Row[]; rowCount: number | null; command: string };
 export function hasDatabase(): boolean {
   return databaseTransport() !== "none";
 }
-export function databaseTransport(): "gateway" | "direct" | "none" {
-  if (process.env["NEON_API_KEY"]?.trim() && process.env["LOVABLE_API_KEY"]?.trim()) return "gateway";
+export function databaseTransport(): "direct" | "none" {
   return process.env["DATABASE_URL"]?.trim() ? "direct" : "none";
 }
 
@@ -62,51 +59,38 @@ begin
   end if;
 end $guard$`;
 
-function gatewayHeaders(): Record<string, string> {
-  const lovable = process.env["LOVABLE_API_KEY"];
-  const connection = process.env["NEON_API_KEY"];
-  if (!lovable || !connection) {
-    throw new Error("DATABASE_URL ontbreekt: geen runtime databaseverbinding ingesteld.");
-  }
-  return {
-    Authorization: `Bearer ${lovable}`,
-    "X-Connection-Api-Key": connection,
-    "Content-Type": "application/json",
-  };
-}
-
-async function post(body: unknown, extraHeaders: Record<string, string> = {}): Promise<any> {
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: { ...gatewayHeaders(), ...extraHeaders },
-    body: JSON.stringify(body),
+/** Dates and timestamps stay strings, as the app has always received them. */
+const TEXT_TYPES = [1082, 1083, 1114, 1184, 1266];
+let pool: { url: string; client: postgres.Sql } | null = null;
+function client(connectionString: string): postgres.Sql {
+  if (pool?.url === connectionString) return pool.client;
+  void pool?.client.end({ timeout: 5 });
+  const types = Object.fromEntries(TEXT_TYPES.map((oid) => [`t${oid}`, {
+    to: oid, from: [oid], serialize: (v: unknown) => String(v), parse: (v: string) => v,
+  }]));
+  const created = postgres(connectionString, {
+    ssl: "require", // TLS is mandatory whatever the URL says
+    max: Number(process.env["DATABASE_POOL_MAX"] ?? 10),
+    idle_timeout: 30,
+    connect_timeout: 15,
+    prepare: false, // safe behind PgBouncer / Neon's pooler
+    onnotice: () => {},
+    types,
   });
-  const text = await res.text();
-  let json: any = {};
-  try {
-    json = JSON.parse(text);
-  } catch {
-    /* non-JSON body */
-  }
-  if (!res.ok) {
-    // Provider text may echo SQL values, names or message contents. Keep only
-    // the status and allowlisted SQLSTATE for diagnostics and retry decisions.
-    const code = typeof json?.code === "string" && /^[A-Z0-9]{5}$/.test(json.code) ? json.code : undefined;
-    console.error("[database] request failed", { status: res.status, code });
-    const err = new Error(GENERIC_TEMPORARY_ERROR) as Error & {
-      code?: string;
-      status?: number;
-    };
-    err.code = code;
-    err.status = res.status;
-    throw err;
-  }
-  return json;
+  pool = { url: connectionString, client: created };
+  return created;
 }
 
 /** Normalise params: objects/arrays of objects go as JSON text for json(b) columns. */
 function normaliseParams(params: unknown[]): unknown[] {
-  return params.map((p) => (p instanceof Date ? p.toISOString() : p === undefined ? null : p));
+  return params.map((p) => {
+    if (p instanceof Date) return p.toISOString();
+    if (p === undefined) return null;
+    if (p instanceof Uint8Array) return p;
+    // Objects (and arrays holding objects) travel as JSON text for json(b) columns.
+    if (p !== null && typeof p === "object" && (!Array.isArray(p) || p.some((v) => v !== null && typeof v === "object"))) return JSON.stringify(p);
+    return p;
+  });
 }
 
 export async function runQuery(query: string, params: unknown[] = []): Promise<GatewayResult> {
@@ -115,7 +99,7 @@ export async function runQuery(query: string, params: unknown[] = []): Promise<G
   return result;
 }
 
-/** One gateway request is one PostgreSQL transaction, never an interactive callback. */
+/** One request is one PostgreSQL transaction, never an interactive callback. */
 export async function runBatch(
   input: Statement[],
   opts: { withContext?: boolean; isolation?: "Serializable" } = {},
@@ -131,28 +115,27 @@ export async function runBatch(
     { query: RUNTIME_ROLE_GUARD, params: [] },
   ];
   const queries = [...prefix, ...input].map(s => ({ query: s.query, params: normaliseParams(s.params) }));
+  const connectionString = process.env["DATABASE_URL"]?.trim();
+  if (!connectionString) throw new Error("DATABASE_URL ontbreekt: geen runtime databaseverbinding ingesteld.");
   let json: { results: GatewayResult[] };
-  if (databaseTransport() === "direct") {
-    const connectionString = process.env["DATABASE_URL"]?.trim();
-    if (!connectionString) throw new Error(GENERIC_TEMPORARY_ERROR);
-    try {
-      // The identical atomic role/context/guard prefix applies to both paths.
-      // An owner URL never gets permission to query as the owner.
-      const client = directNeon(connectionString, { fullResults: true });
-      // isolationLevel makes the driver open the batch with BEGIN ISOLATION LEVEL SERIALIZABLE.
-      const results = await client.transaction(
-        queries.map(s => client.query(s.query, s.params)),
-        opts.isolation ? { isolationLevel: opts.isolation } : undefined,
-      );
-      json = { results: results.map(r => ({ rows: r.rows as Row[], rowCount: r.rowCount, command: r.command })) };
-    } catch (cause) {
-      const code = (cause as { code?: unknown })?.code;
-      const safeCode = typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : undefined;
-      console.error("[database] direct request failed", { code: safeCode });
-      throw Object.assign(new Error(GENERIC_TEMPORARY_ERROR), { code: safeCode });
-    }
-  } else {
-    json = await post({ queries }, opts.isolation ? { "Neon-Batch-Isolation-Level": opts.isolation } : {});
+  try {
+    // The atomic role/context/guard prefix runs first; an owner URL never queries as the owner.
+    const db = client(connectionString);
+    const work = async (tx: postgres.TransactionSql) => {
+      const out: GatewayResult[] = [];
+      for (const s of queries) {
+        const r = await tx.unsafe(s.query, s.params as never[]);
+        out.push({ rows: [...r] as Row[], rowCount: r.count ?? null, command: String(r.command ?? "") });
+      }
+      return out;
+    };
+    const results = opts.isolation ? await db.begin("isolation level serializable", work) : await db.begin(work);
+    json = { results: results as GatewayResult[] };
+  } catch (cause) {
+    const code = (cause as { code?: unknown })?.code;
+    const safeCode = typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : undefined;
+    console.error("[database] request failed", { code: safeCode });
+    throw Object.assign(new Error(GENERIC_TEMPORARY_ERROR), { code: safeCode });
   }
   if (!Array.isArray(json.results) || json.results.length !== prefix.length + input.length) {
     throw new Error("Invalid Neon transaction response");

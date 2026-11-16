@@ -3,12 +3,13 @@
  * search_path = pg_catalog, except the shrinking list in
  * scripts/security-definer-legacy.ts. Read-only.
  *
- *   bun scripts/security-definer-check.ts                    live (MIGRATION_URL, else Lovable Neon gateway)
+ *   bun scripts/security-definer-check.ts                    live (MIGRATION_URL, else DATABASE_URL)
  *   bun scripts/security-definer-check.ts --rows=rows.json   offline, rows exported as [{schema, name, args, config}]
  *
  * Exit 1 on an unpinned function that is not listed, or on a listed function
  * that is already pinned or gone (remove it from the list).
  */
+import { closeDirect, sqlRequest } from "./db-direct";
 import { readFileSync } from "node:fs";
 import { LEGACY_DEFINER_SEARCH_PATH } from "./security-definer-legacy";
 import { definerFindings, definerKey, searchPathFromConfig } from "./security-definer-policy";
@@ -24,31 +25,11 @@ const QUERY = `select n.nspname as schema, p.proname as name, pg_catalog.pg_get_
 async function readRows(): Promise<Row[]> {
   const fromFile = process.argv.find((a) => a.startsWith("--rows="))?.slice(7);
   if (fromFile) return JSON.parse(readFileSync(fromFile, "utf8")) as Row[];
-  const url = process.env["MIGRATION_URL"];
-  if (url) {
-    const { Pool } = await import("@neondatabase/serverless");
-    const pool = new Pool({ connectionString: url });
-    try {
-      return (await pool.query<Row>(QUERY)).rows;
-    } finally {
-      await pool.end();
-    }
+  try {
+    return (await sqlRequest({ query: QUERY })).rows as Row[];
+  } finally {
+    await closeDirect();
   }
-  if (!process.env["LOVABLE_API_KEY"] || !process.env["NEON_API_KEY"]) {
-    throw new Error("Geen databaseverbinding: zet MIGRATION_URL, LOVABLE_API_KEY + NEON_API_KEY, of gebruik --rows=<bestand>.");
-  }
-  const res = await fetch("https://connector-gateway.lovable.dev/neon/sql", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env["LOVABLE_API_KEY"]}`,
-      "X-Connection-Api-Key": process.env["NEON_API_KEY"] ?? "",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query: QUERY, params: [] }),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`${res.status}: ${text.slice(0, 400)}`);
-  return (JSON.parse(text) as { rows: Row[] }).rows;
 }
 
 const rows = await readRows();

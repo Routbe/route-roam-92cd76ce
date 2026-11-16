@@ -1,6 +1,6 @@
 /**
  * Applies pending db/NN_*.sql files through the Lovable Neon connector gateway
- * (LOVABLE_API_KEY + NEON_API_KEY), tracked in public.schema_migrations.
+ * (MIGRATION_URL, else DATABASE_URL; direct TLS), tracked in public.schema_migrations.
  * Each file is sent as one batch statement => one transaction. From 0255 on the
  * file is linted and the batch ends with the SECURITY DEFINER guard, so a
  * function without search_path = pg_catalog rolls the whole file back.
@@ -8,26 +8,13 @@
  *   bun scripts/migrate-gateway.ts            apply pending
  *   bun scripts/migrate-gateway.ts --dry-run  list pending
  */
+import { closeDirect, sqlRequest } from "./db-direct";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { checksumDrift, checksumOf, listMigrationFiles, planMigrations, splitSql } from "./migration-plan";
 import { migrationDefinerGuardSql, migrationDefinerViolations, guardedMigration } from "./security-definer-policy";
 
-const URL_ = "https://connector-gateway.lovable.dev/neon/sql";
-async function q(body: unknown): Promise<any> {
-  const res = await fetch(URL_, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env["LOVABLE_API_KEY"]}`,
-      "X-Connection-Api-Key": process.env["NEON_API_KEY"] ?? "",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`${res.status}: ${text.slice(0, 400)}`);
-  return JSON.parse(text);
-}
+const q = (body: any): Promise<any> => sqlRequest(body);
 
 const dryRun = process.argv.includes("--dry-run");
 // --only=a.sql,b.sql applies just those files (e.g. to hold back a migration waiting on a deploy).
@@ -76,3 +63,4 @@ for (const step of planMigrations(files, done)) {
     break;
   }
 }
+await closeDirect();

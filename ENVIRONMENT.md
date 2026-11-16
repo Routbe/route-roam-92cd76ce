@@ -4,20 +4,19 @@
 
 1. Import the GitHub repo in Vercel. Framework preset: **Other**. Use the committed `vercel.json`: build command **`bun run build:vercel`**, output directory unset. The build first runs `scripts/check-release-env.ts`, then `NITRO_PRESET=vercel vite build` selects the Nitro Vercel preset (Build Output API, `.vercel/output`). Security headers (HSTS, CSP with frame-ancestors, nosniff, Referrer-Policy, COOP/COEP on /secure) come only from `src/lib/security-headers.ts` at runtime; `vercel.json` deliberately adds none, because a second CSP or frame header would be intersected by browsers and break route-specific policies. Lovable keeps its managed preview target. Verify `.vercel/output/config.json` in the Vercel build before promoting a release; a Vercel deployment has not been verified here.
 2. Paste every variable from *Required on Vercel* below, plus the optional groups you use, in Vercel → Settings → Environment Variables (Production and Preview).
-3. Review pending `db/NNNN_*.sql` migrations separately. Never run owner-level migrations automatically in a Vercel build. Use the Neon gateway migration workflow or the Neon SQL editor after reviewing the exact statements; then run `bun run db:check` using gateway credentials (schema drift against `db/schema.snapshot.json`). Never apply these scripts to Lovable Cloud.
+3. Review pending `db/NNNN_*.sql` migrations separately. Never run owner-level migrations automatically in a Vercel build. Apply one reviewed file with `MIGRATION_URL=... bun scripts/migration-rollout.ts <file> --after=<previous> --apply` (checksum-verified, one transaction) or the Neon SQL editor; then run `bun scripts/schema-snapshot.ts --check` with `MIGRATION_URL` (schema drift against `db/schema.snapshot.json`).
 4. Point each OAuth provider's callback to `<PUBLIC_ORIGIN>/api/auth/callback/<provider>` (using the normalized HTTPS origin).
-5. A daily scheduler must call `/api/public/cron/cleanup-assets`; the committed `vercel.json` schedules it at 03:00 UTC (other hosts: any external scheduler). Configure **`CRON_SECRET`** in Vercel: Vercel sends it as a bearer token. `LOVABLE_CRON_SECRET` is the handler's fallback for other schedulers. Other queues, including outbound webhooks and audit checkpoints, need their own reviewed schedules; the daily cleanup does not deliver webhooks.
+5. A daily scheduler must call `/api/public/cron/cleanup-assets`; the committed `vercel.json` schedules it at 03:00 UTC (other hosts: any external scheduler). Configure **`CRON_SECRET`** in Vercel: Vercel sends it as a bearer token. Other schedulers send the same `CRON_SECRET`. Other queues, including outbound webhooks and audit checkpoints, need their own reviewed schedules; the daily cleanup does not deliver webhooks.
 
 `NODE_ENV` is set by Vercel; never set it yourself.
 
 ## Required for release validation
 
-- `DATABASE_URL` — Server-only Neon PostgreSQL URL, read at request time when gateway credentials are absent. Configure it in Vercel Production (and Preview when used), then redeploy; a build-only variable cannot supply a running server.
+- `DATABASE_URL` — Server-only Neon PostgreSQL URL, the only runtime database path (standard PostgreSQL protocol, TLS enforced: `sslmode=require` is always applied). Configure it in Vercel Production (and Preview when used), then redeploy; a build-only variable cannot supply a running server.
 - `PUBLIC_ORIGIN` — Canonical authentication origin. Valid HTTPS URLs are normalized to their origin, including URLs with trailing slashes or paths. Invalid formatting warns rather than blocking compilation.
 
 ## Additional runtime requirements (not build gates)
 
-- `LOVABLE_API_KEY` / `NEON_API_KEY` — Optional linked-gateway transport (preferred when both exist), not required for DATABASE_URL deployments. Never prefix secrets with `VITE_`.
 - `BETTER_AUTH_SECRET` — Signs sessions. 32+ random characters, identical on every deploy (changing it signs everyone out).
 - `BETTER_AUTH_URL` — Public base URL, e.g. https://rout.be (no trailing slash).
 - `NEXT_PUBLIC_APP_URL` — Same public URL; used for auth callbacks and links in emails.
@@ -27,7 +26,7 @@
 ## Database at runtime
 
 - Both database transports, Better Auth sessions, and ALTCHA replay checks use the same atomic adapter. Every batch switches to `rout_app`, sets transaction-local caller context, and verifies the role is neither owner, superuser, nor RLS-bypassing. The database must contain the reviewed schema and grant the runtime login permission to use `rout_app`; code never invents missing credentials or bypasses this guard.
-- `MIGRATION_URL` — Legacy local migration tooling only; not a runtime credential and not needed on Vercel. Prefer the reviewed gateway/Neon SQL editor workflow.
+- `MIGRATION_URL` — Owner-level Neon URL for the admin scripts in `scripts/` (migrations, schema snapshot, history and definer checks, RLS audit). Never a runtime credential; never set it on the app server.
 
 ## Release verification
 
@@ -55,7 +54,6 @@ The release validator requires only DATABASE_URL and PUBLIC_ORIGIN. The runtime 
 - `CONTACT_HASH_SALT` — Server-only random secret.
 - `BOOKING_HMAC_KEY` — Server-only random secret; hashes external calendar event ids (booking engine).
 - `ADMIN_BOOTSTRAP_TOKEN` — Server-only random secret.
-- `LOVABLE_CRON_SECRET` — Server-only random secret.
 - `CRON_SECRET` — Required for Vercel's scheduled cleanup; Vercel sends a bearer header. Avoid query-string secrets.
 - `TELEGRAM_BOT_TOKEN` — Server-only BotFather token for the phone-verification bot (`/api/public/telegram/webhook`).
 
@@ -147,7 +145,7 @@ The release validator requires only DATABASE_URL and PUBLIC_ORIGIN. The runtime 
 Server-only. AES-256-GCM key material for creator PSP secrets (`psp_credentials`). At least 32 random characters.
 
 ## MIGRATION_URL
-Legacy owner connection used only by local migration tooling (never at runtime or in a Vercel build). Prefer reviewed migrations through the gateway or Neon SQL editor. Not needed on Vercel.
+Owner connection used only by the admin scripts (never at runtime or in a build).
 
 ## GITLAB_ISSUER
 Optional GitLab server URL (default https://gitlab.com, no trailing slash). Set for self-managed GitLab.
@@ -194,7 +192,7 @@ Live Presence (Studio → Verbindingen & Integraties). Create an app at develope
 - `DIDIT_API_KEY`, `DIDIT_WORKFLOW_ID`, `DIDIT_WEBHOOK_SECRET` — Didit passport scan. Webhook URL: `https://rout.be/api/public/identity/didit-webhook`. Max 500 successful scans per month.
 
 ## Cron schedule
-`vercel.json` schedules `/api/public/cron/cleanup-assets` (daily, removes expired `user_assets` and `shared_files` from storage and database), plus expired ALTCHA rows, security codes and the DNS check — one daily job, since Vercel Hobby allows only one. Codes are also purged lazily on issue, ALTCHA on ~5% of challenges, and integration statuses refresh on visit (stale-while-revalidate). Vercel sends `Authorization: Bearer $CRON_SECRET`. On other hosts call the same URLs from any scheduler with that header (or `x-cron-secret`); `cleanup-assets` and `purge-shared-files` accept either `CRON_SECRET` or `LOVABLE_CRON_SECRET`, compare in constant time and never accept the secret in the URL. Each run drains expired files oldest-first for up to ~20 s, keeps rows whose storage delete failed for the next run, and reports `more: true` when work remains.
+`vercel.json` schedules `/api/public/cron/cleanup-assets` (daily, removes expired `user_assets` and `shared_files` from storage and database), plus expired ALTCHA rows, security codes and the DNS check — one daily job, since Vercel Hobby allows only one. Codes are also purged lazily on issue, ALTCHA on ~5% of challenges, and integration statuses refresh on visit (stale-while-revalidate). Vercel sends `Authorization: Bearer $CRON_SECRET`. On other hosts call the same URLs from any scheduler with that header (or `x-cron-secret`); `cleanup-assets` and `purge-shared-files` accept only `CRON_SECRET`, compare in constant time and never accept the secret in the URL. Each run drains expired files oldest-first for up to ~20 s, keeps rows whose storage delete failed for the next run, and reports `more: true` when work remains.
 
 ## Telegram
 Register the webhook once with `TELEGRAM_BOT_TOKEN=... bun scripts/telegram-set-webhook.ts https://rout.be` (secret token is derived from the bot token).
@@ -277,3 +275,8 @@ Every value below is server-only, never `VITE_`-prefixed, and must stay identica
 - `OMNI_DATABASE_URL`, `OMNI_APP_ORIGIN`, `OMNI_EVENTS_URL`, `OMNI_REALTIME_SECRET`, `OMNI_RENDER_HOSTS`, `CHROMIUM_PATH`, `HOST`, `PORT` — read only by the worker daemon (see `worker/README.md`), never by the web app.
 
 Storage names are exactly those in "File storage (Scaleway)" above (`SCALEWAY_DEFAULT_BUCKET`, `SCALEWAY_CLIENT_BUCKET`, `SCALEWAY_INTERNAL_BUCKET`); a variable named `SCALEWAY_BUCKET` is not read by any code. Without client-bucket credentials `/@handle/prekey-bundle.json` answers 503 `storage_unavailable` (no-store); a configured bucket without a published document answers 404 `not_available`.
+
+
+## Build target
+
+`vite build` uses the standard TanStack Start + Nitro plugins. The server target comes from `NITRO_PRESET` (default `node-server`: run `node .output/server/index.mjs`, `PORT` sets the port; `vercel` and other Nitro presets also work). No hosting provider is assumed.

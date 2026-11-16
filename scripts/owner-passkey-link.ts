@@ -10,24 +10,12 @@
  *
  *   bun scripts/owner-passkey-link.ts --email=hallo@rout.be [--origin=https://rout.dlp.li]
  *
- * Needs the database gateway keys (LOVABLE_API_KEY + NEON_API_KEY), like migrate-gateway.ts.
+ * Needs MIGRATION_URL (owner login, direct TLS), like migrate-gateway.ts.
  * Print the link only to your own terminal and open it yourself.
  */
-const URL_ = "https://connector-gateway.lovable.dev/neon/sql";
-
+import { sqlRequest } from "./db-direct";
 async function q(query: string, params: unknown[] = []): Promise<Record<string, unknown>[]> {
-  const res = await fetch(URL_, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env["LOVABLE_API_KEY"]}`,
-      "X-Connection-Api-Key": process.env["NEON_API_KEY"] ?? "",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query, params }),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`${res.status}: ${text.slice(0, 300)}`);
-  return (JSON.parse(text) as { rows: Record<string, unknown>[] }).rows;
+  return (await sqlRequest({ query, params })).rows;
 }
 
 const arg = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -38,8 +26,8 @@ const owners = (process.env["OWNER_EMAILS"] ?? process.env["ADMIN_EMAIL"] ?? "ha
   .map((v) => v.trim().toLowerCase())
   .filter((v) => v.includes("@"));
 
-if (!process.env["LOVABLE_API_KEY"] || !process.env["NEON_API_KEY"]) {
-  console.error("Missing LOVABLE_API_KEY or NEON_API_KEY.");
+if (!process.env["MIGRATION_URL"] && !process.env["DATABASE_URL"]) {
+  console.error("Missing MIGRATION_URL.");
   process.exit(1);
 }
 if (!email || !owners.includes(email)) {

@@ -6,9 +6,9 @@
  *   bun scripts/schema-snapshot.ts --types     regenerate src/lib/db-types.gen.ts from the committed snapshot
  *   bun scripts/schema-snapshot.ts --baseline  write db/0000_baseline.sql (once; it is immutable afterwards)
  *
- * Connection: MIGRATION_URL or DATABASE_URL (direct), else the Lovable Neon
- * gateway (LOVABLE_API_KEY + NEON_API_KEY). Read-only: only catalog queries.
+ * Connection: MIGRATION_URL, else DATABASE_URL (direct, TLS). Read-only: only catalog queries.
  */
+import { closeDirect, sqlRequest } from "./db-direct";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { BASELINE_COVERS, BASELINE_FILE } from "./migration-plan";
@@ -19,30 +19,7 @@ const SNAPSHOT = join(root, "db", "schema.snapshot.json");
 const TYPES = join(root, "src", "lib", "db-types.gen.ts");
 
 async function executor(): Promise<{ exec: Exec; close: () => Promise<void> }> {
-  const url = process.env["MIGRATION_URL"] || process.env["DATABASE_URL"];
-  if (url) {
-    const { Pool } = await import("@neondatabase/serverless");
-    const pool = new Pool({ connectionString: url });
-    return { exec: async (q) => (await pool.query(q)).rows, close: () => pool.end() };
-  }
-  if (!process.env["LOVABLE_API_KEY"] || !process.env["NEON_API_KEY"]) {
-    throw new Error("Geen databaseverbinding: zet MIGRATION_URL/DATABASE_URL of LOVABLE_API_KEY + NEON_API_KEY.");
-  }
-  const exec: Exec = async (query) => {
-    const res = await fetch("https://connector-gateway.lovable.dev/neon/sql", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env["LOVABLE_API_KEY"]}`,
-        "X-Connection-Api-Key": process.env["NEON_API_KEY"] ?? "",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query, params: [] }),
-    });
-    const text = await res.text();
-    if (!res.ok) throw new Error(`${res.status}: ${text.slice(0, 400)}`);
-    return (JSON.parse(text) as { rows: Record<string, unknown>[] }).rows;
-  };
-  return { exec, close: async () => undefined };
+  return { exec: async (query) => (await sqlRequest({ query })).rows, close: closeDirect };
 }
 
 const args = new Set(process.argv.slice(2));

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 /**
  * Maandelijkse afschrijving van €0,09 per actieve SecureShield-relay.
- * Wordt aangeroepen door de scheduler; beveiligd met cronGuard (CRON_SECRET of LOVABLE_CRON_SECRET, constant-time).
+ * Wordt aangeroepen door de scheduler; beveiligd met cronGuard (CRON_SECRET, constant-time).
  */
 export const Route = createFileRoute("/api_/public/cron/secureshield-billing")({
   server: {
