@@ -324,3 +324,8 @@
 - [x] Fase 2: db-pending/0285_workspace_group_encryption.sql — zes tabellen, enveloppen alleen voor eigenaar/beheerder, epoch-rotatie, omzetten van beheerder wist hun enveloppen, allemaal SECURITY DEFINER op pg_catalog, pg_temp (nog niet toegepast)
 - [x] Fase 2: PGlite + fast-check tests voor 0285 (src/test/workspace-group-0285.test.ts, 24 tests: rechten, RBAC, rotatie, vloedplafond, modelcheck tot diepte 3, rollback)
 - [ ] Fase 2: /w/:slug/ask (anoniem, RVE1 in de browser, #token=) + inbox met privé/FAQ-antwoord
+
+## Owner directive 2026-11-16 23:20 — after live Neon audit (HANDOVER appendix)
+- [ ] A3 + A2: db/0286 additive — revoke PUBLIC/rout_app EXECUTE on trigger-only definers; index the 47 unindexed foreign keys (live only after owner GO)
+- [ ] Workspace manager inbox: key init, list, decrypt in worker, private reply, publish to FAQ, decline
+- [ ] A1 profile privacy: EXPAND (definers for moderation/Stripe/VAT reads, code moved) then CONTRACT in db-pending revoking those columns from rout_app
