@@ -5,9 +5,13 @@ const env = { CRON_SECRET: "vercel-secret-0123456789", LOVABLE_CRON_SECRET: "oth
 const req = (headers: Record<string, string>, url = "https://rout.be/api/public/cron/cleanup-assets") => new Request(url, { headers });
 
 describe("cleanup job password", () => {
-  it("accepts either configured secret from a header", async () => {
+  it("accepts CRON_SECRET from either header", async () => {
     expect(await cronGuard(req({ authorization: "Bearer vercel-secret-0123456789" }), env)).toBeNull();
-    expect(await cronGuard(req({ "x-cron-secret": "other-secret-0123456789" }), env)).toBeNull();
+    expect(await cronGuard(req({ "x-cron-secret": "vercel-secret-0123456789" }), env)).toBeNull();
+  });
+  it("no longer accepts LOVABLE_CRON_SECRET", async () => {
+    expect((await cronGuard(req({ "x-cron-secret": "other-secret-0123456789" }), env))?.status).toBe(401);
+    expect((await cronGuard(req({ "x-cron-secret": "other-secret-0123456789" }), { LOVABLE_CRON_SECRET: "other-secret-0123456789" }))?.status).toBe(503);
   });
   it("refuses a secret in the URL, a wrong or a missing one", async () => {
     expect((await cronGuard(req({}, "https://rout.be/api/public/cron/cleanup-assets?token=vercel-secret-0123456789"), env))?.status).toBe(401);
