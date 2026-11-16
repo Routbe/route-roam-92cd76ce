@@ -26713,6 +26713,174 @@
     },
     {
       "schema": "public",
+      "name": "workspace_ask_settings",
+      "columns": [
+        {
+          "name": "workspace_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "notNull": true,
+          "default": "false",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()",
+          "identity": null,
+          "generated": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "workspace_ask_settings_pkey",
+          "kind": "p",
+          "def": "PRIMARY KEY (workspace_id)"
+        },
+        {
+          "name": "workspace_ask_settings_updated_by_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL"
+        },
+        {
+          "name": "workspace_ask_settings_workspace_id_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [],
+      "triggers": [],
+      "rls": true,
+      "forceRls": false,
+      "policies": [],
+      "grants": {}
+    },
+    {
+      "schema": "public",
+      "name": "workspace_faq_items",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "notNull": true,
+          "default": "gen_random_uuid()",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "workspace_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "question_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "question_text",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "answer_text",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "published_by",
+          "type": "uuid",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()",
+          "identity": null,
+          "generated": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "workspace_faq_items_answer_text_check",
+          "kind": "c",
+          "def": "CHECK (((char_length(answer_text) >= 1) AND (char_length(answer_text) <= 4000)))"
+        },
+        {
+          "name": "workspace_faq_items_pkey",
+          "kind": "p",
+          "def": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "workspace_faq_items_published_by_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (published_by) REFERENCES users(id) ON DELETE SET NULL"
+        },
+        {
+          "name": "workspace_faq_items_question_id_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (question_id) REFERENCES workspace_questions(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "workspace_faq_items_question_id_key",
+          "kind": "u",
+          "def": "UNIQUE (question_id)"
+        },
+        {
+          "name": "workspace_faq_items_question_text_check",
+          "kind": "c",
+          "def": "CHECK (((char_length(question_text) >= 1) AND (char_length(question_text) <= 2000)))"
+        },
+        {
+          "name": "workspace_faq_items_workspace_id_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX workspace_faq_ws_idx ON public.workspace_faq_items USING btree (workspace_id, published_at DESC)"
+      ],
+      "triggers": [],
+      "rls": true,
+      "forceRls": false,
+      "policies": [],
+      "grants": {}
+    },
+    {
+      "schema": "public",
       "name": "workspace_invites",
       "columns": [
         {
@@ -26843,6 +27011,218 @@
     },
     {
       "schema": "public",
+      "name": "workspace_keys",
+      "columns": [
+        {
+          "name": "workspace_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "epoch",
+          "type": "integer",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "public_key",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "kid",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "notNull": true,
+          "default": "'active'::text",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "retired_at",
+          "type": "timestamp with time zone",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "workspace_keys_created_by_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL"
+        },
+        {
+          "name": "workspace_keys_epoch_check",
+          "kind": "c",
+          "def": "CHECK ((epoch >= 1))"
+        },
+        {
+          "name": "workspace_keys_kid_check",
+          "kind": "c",
+          "def": "CHECK ((kid ~ '^[A-Za-z0-9_-]{22}$'::text))"
+        },
+        {
+          "name": "workspace_keys_pkey",
+          "kind": "p",
+          "def": "PRIMARY KEY (workspace_id, epoch)"
+        },
+        {
+          "name": "workspace_keys_public_key_check",
+          "kind": "c",
+          "def": "CHECK (((public_key ~ '^[A-Za-z0-9_-]+$'::text) AND (length(public_key) = 2134)))"
+        },
+        {
+          "name": "workspace_keys_status_check",
+          "kind": "c",
+          "def": "CHECK ((status = ANY (ARRAY['active'::text, 'retired'::text])))"
+        },
+        {
+          "name": "workspace_keys_workspace_id_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX workspace_keys_one_active_idx ON public.workspace_keys USING btree (workspace_id) WHERE (status = 'active'::text)"
+      ],
+      "triggers": [],
+      "rls": true,
+      "forceRls": false,
+      "policies": [],
+      "grants": {}
+    },
+    {
+      "schema": "public",
+      "name": "workspace_member_keys",
+      "columns": [
+        {
+          "name": "workspace_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "epoch",
+          "type": "integer",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "member_user_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "member_ref",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "kid",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "envelope",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()",
+          "identity": null,
+          "generated": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "workspace_member_keys_envelope_check",
+          "kind": "c",
+          "def": "CHECK (((envelope ~ '^[A-Za-z0-9_-]+$'::text) AND (length(envelope) = ANY (ARRAY[3583, 7679, 24063])) AND (\"left\"(envelope, 8) = 'UlZFMQEK'::text)))"
+        },
+        {
+          "name": "workspace_member_keys_kid_check",
+          "kind": "c",
+          "def": "CHECK ((kid ~ '^[A-Za-z0-9_-]{22}$'::text))"
+        },
+        {
+          "name": "workspace_member_keys_member_user_id_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (member_user_id) REFERENCES users(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "workspace_member_keys_pkey",
+          "kind": "p",
+          "def": "PRIMARY KEY (workspace_id, epoch, member_user_id)"
+        },
+        {
+          "name": "workspace_member_keys_workspace_id_epoch_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (workspace_id, epoch) REFERENCES workspace_keys(workspace_id, epoch) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX workspace_member_keys_member_idx ON public.workspace_member_keys USING btree (member_user_id, epoch)"
+      ],
+      "triggers": [],
+      "rls": true,
+      "forceRls": false,
+      "policies": [],
+      "grants": {}
+    },
+    {
+      "schema": "public",
       "name": "workspace_members",
       "columns": [
         {
@@ -26898,7 +27278,9 @@
       "indexes": [
         "CREATE INDEX workspace_members_user_idx ON public.workspace_members USING btree (user_id)"
       ],
-      "triggers": [],
+      "triggers": [
+        "CREATE TRIGGER workspace_members_role_revoke_ws_keys AFTER DELETE OR UPDATE OF role ON public.workspace_members FOR EACH ROW EXECUTE FUNCTION rout_ws_group_member_revoke()"
+      ],
       "rls": true,
       "forceRls": false,
       "policies": [
@@ -27242,6 +27624,266 @@
         }
       ],
       "indexes": [],
+      "triggers": [],
+      "rls": true,
+      "forceRls": false,
+      "policies": [],
+      "grants": {}
+    },
+    {
+      "schema": "public",
+      "name": "workspace_question_replies",
+      "columns": [
+        {
+          "name": "question_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "envelope",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "blake3_payload_hash",
+          "type": "bytea",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "replied_by",
+          "type": "uuid",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()",
+          "identity": null,
+          "generated": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "workspace_question_replies_blake3_payload_hash_check",
+          "kind": "c",
+          "def": "CHECK ((octet_length(blake3_payload_hash) = 32))"
+        },
+        {
+          "name": "workspace_question_replies_blake3_payload_hash_key",
+          "kind": "u",
+          "def": "UNIQUE (blake3_payload_hash)"
+        },
+        {
+          "name": "workspace_question_replies_envelope_check",
+          "kind": "c",
+          "def": "CHECK (((envelope ~ '^[A-Za-z0-9_-]+$'::text) AND (length(envelope) = ANY (ARRAY[3583, 7679, 24063])) AND (\"left\"(envelope, 8) = 'UlZFMQEM'::text)))"
+        },
+        {
+          "name": "workspace_question_replies_pkey",
+          "kind": "p",
+          "def": "PRIMARY KEY (question_id)"
+        },
+        {
+          "name": "workspace_question_replies_question_id_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (question_id) REFERENCES workspace_questions(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "workspace_question_replies_replied_by_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (replied_by) REFERENCES users(id) ON DELETE SET NULL"
+        }
+      ],
+      "indexes": [],
+      "triggers": [],
+      "rls": true,
+      "forceRls": false,
+      "policies": [],
+      "grants": {}
+    },
+    {
+      "schema": "public",
+      "name": "workspace_questions",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "notNull": true,
+          "default": "gen_random_uuid()",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "workspace_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "epoch",
+          "type": "integer",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "payload_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "envelope",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "blake3_payload_hash",
+          "type": "bytea",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "pow_nonce",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "epoch_bucket",
+          "type": "integer",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "guest_public_key",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "token_hash",
+          "type": "bytea",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "notNull": true,
+          "default": "'open'::text",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "answered_at",
+          "type": "timestamp with time zone",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "workspace_questions_blake3_payload_hash_check",
+          "kind": "c",
+          "def": "CHECK ((octet_length(blake3_payload_hash) = 32))"
+        },
+        {
+          "name": "workspace_questions_blake3_payload_hash_key",
+          "kind": "u",
+          "def": "UNIQUE (blake3_payload_hash)"
+        },
+        {
+          "name": "workspace_questions_envelope_check",
+          "kind": "c",
+          "def": "CHECK (((envelope ~ '^[A-Za-z0-9_-]+$'::text) AND (length(envelope) = ANY (ARRAY[3583, 7679, 24063])) AND (\"left\"(envelope, 8) = 'UlZFMQEL'::text)))"
+        },
+        {
+          "name": "workspace_questions_epoch_bucket_check",
+          "kind": "c",
+          "def": "CHECK ((epoch_bucket > 0))"
+        },
+        {
+          "name": "workspace_questions_guest_public_key_check",
+          "kind": "c",
+          "def": "CHECK (((guest_public_key ~ '^[A-Za-z0-9_-]+$'::text) AND (length(guest_public_key) = 2134)))"
+        },
+        {
+          "name": "workspace_questions_payload_id_key",
+          "kind": "u",
+          "def": "UNIQUE (payload_id)"
+        },
+        {
+          "name": "workspace_questions_pkey",
+          "kind": "p",
+          "def": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "workspace_questions_pow_nonce_check",
+          "kind": "c",
+          "def": "CHECK ((pow_nonce ~ '^[0-9a-f]{16}$'::text))"
+        },
+        {
+          "name": "workspace_questions_status_check",
+          "kind": "c",
+          "def": "CHECK ((status = ANY (ARRAY['open'::text, 'answered'::text, 'published'::text, 'declined'::text])))"
+        },
+        {
+          "name": "workspace_questions_token_hash_check",
+          "kind": "c",
+          "def": "CHECK ((octet_length(token_hash) = 32))"
+        },
+        {
+          "name": "workspace_questions_workspace_id_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX workspace_questions_ws_idx ON public.workspace_questions USING btree (workspace_id, created_at DESC)",
+        "CREATE UNIQUE INDEX workspace_questions_token_idx ON public.workspace_questions USING btree (workspace_id, token_hash)"
+      ],
       "triggers": [],
       "rls": true,
       "forceRls": false,
@@ -33801,6 +34443,18 @@
     },
     {
       "schema": "public",
+      "name": "rout_public_ws_ask_key",
+      "args": "p_slug text",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_public_ws_ask_key(p_slug text)\n RETURNS jsonb\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select pg_catalog.jsonb_build_object('workspaceId', w.id, 'name', w.name, 'slug', w.slug,\n           'epoch', k.epoch, 'kid', k.kid, 'publicKey', k.public_key)\n    from public.workspaces w\n    join public.workspace_ask_settings s on s.workspace_id = w.id and s.enabled\n    join public.workspace_keys k on k.workspace_id = w.id and k.status = 'active'\n   where w.slug = pg_catalog.lower(p_slug)\n   limit 1\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_public_ws_faq",
+      "args": "p_slug text",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_public_ws_faq(p_slug text)\n RETURNS TABLE(id uuid, question_text text, answer_text text, published_at timestamp with time zone)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select f.id, f.question_text, f.answer_text, f.published_at\n    from public.workspace_faq_items f\n    join public.workspaces w on w.id = f.workspace_id\n   where w.slug = pg_catalog.lower(p_slug)\n   order by f.published_at desc\n   limit 100\n$function$"
+    },
+    {
+      "schema": "public",
       "name": "rout_public_ws_support",
       "args": "p_slug text",
       "def": "CREATE OR REPLACE FUNCTION public.rout_public_ws_support(p_slug text)\n RETURNS TABLE(workspace_id uuid, name text, slug text, avatar_url text, account_name text, iban text, presets_cents integer[], allow_custom boolean, min_cents integer, message text, providers text[])\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select w.id, w.name, w.slug, w.avatar_url, s.account_name, s.iban, s.presets_cents, s.allow_custom, s.min_cents, s.message,\n         case when s.psp_enabled then coalesce((select pg_catalog.array_agg(c.provider order by c.provider)\n           from public.workspace_psp_credentials c where c.workspace_id = w.id), '{}'::text[]) else '{}'::text[] end\n    from public.workspaces w\n    join public.workspace_tip_settings s on s.workspace_id = w.id\n   where w.slug = pg_catalog.lower(p_slug) and s.enabled and s.iban is not null and s.account_name is not null\n     and exists (select 1 from public.rout_ws_support_names(w.id) n\n                  where public.rout_ws_support_norm(n) = public.rout_ws_support_norm(s.account_name))\n   limit 1\n$function$"
@@ -34395,6 +35049,72 @@
     },
     {
       "schema": "public",
+      "name": "rout_ws_answer_fetch",
+      "args": "p_token_hash bytea",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_answer_fetch(p_token_hash bytea)\n RETURNS jsonb\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select coalesce(\n    (select pg_catalog.jsonb_build_object('ok', true, 'status', q.status,\n             'envelope', (select r.envelope from public.workspace_question_replies r where r.question_id = q.id),\n             'workspaceName', w.name, 'slug', w.slug)\n       from public.workspace_questions q\n       join public.workspaces w on w.id = q.workspace_id\n      where q.token_hash = p_token_hash\n      limit 1),\n    pg_catalog.jsonb_build_object('ok', false, 'reason', 'not_found'))\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_ask_save",
+      "args": "p_ws uuid, p_enabled boolean",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_ask_save(p_ws uuid, p_enabled boolean)\n RETURNS text\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nbegin\n  if not public.rout_ws_group_manager(p_ws) then return 'forbidden'; end if;\n  if p_enabled is null then return 'invalid'; end if;\n  insert into public.workspace_ask_settings (workspace_id, enabled, updated_by, updated_at)\n  values (p_ws, p_enabled, public.rout_current_user_id(), pg_catalog.now())\n  on conflict (workspace_id) do update set enabled = excluded.enabled,\n    updated_by = excluded.updated_by, updated_at = excluded.updated_at;\n  return 'ok';\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_active",
+      "args": "p_ws uuid",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_active(p_ws uuid)\n RETURNS TABLE(epoch integer, public_key text, kid text)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select k.epoch, k.public_key, k.kid from public.workspace_keys k\n   where k.workspace_id = p_ws and k.status = 'active'\n   limit 1\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_envelope_ok",
+      "args": "p_envelope text, p_kind text",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_envelope_ok(p_envelope text, p_kind text)\n RETURNS boolean\n LANGUAGE sql\n IMMUTABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select p_envelope is not null and p_kind in ('wsk', 'wq', 'wa')\n     and p_envelope ~ '^[A-Za-z0-9_-]+$'\n     and pg_catalog.length(p_envelope) in (3583, 7679, 24063)\n     and pg_catalog.left(p_envelope, 8) = case p_kind\n           when 'wsk' then 'UlZFMQEK' when 'wq' then 'UlZFMQEL' else 'UlZFMQEM' end\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_epoch_ok",
+      "args": "p_bucket integer",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_epoch_ok(p_bucket integer)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select p_bucket is not null\n     and pg_catalog.abs(p_bucket - pg_catalog.floor(pg_catalog.date_part('epoch', pg_catalog.now()) / 600)::integer) <= 1\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_manager",
+      "args": "p_ws uuid",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_manager(p_ws uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select exists (select 1 from public.workspace_members m\n    where m.workspace_id = p_ws and m.user_id = public.rout_current_user_id()\n      and m.role::text in ('owner', 'admin'))\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_member_key",
+      "args": "p_ws uuid, p_epoch integer",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_member_key(p_ws uuid, p_epoch integer)\n RETURNS jsonb\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select coalesce(\n    (select pg_catalog.jsonb_build_object('ok', true, 'envelope', m.envelope, 'kid', m.kid, 'memberRef', m.member_ref)\n       from public.workspace_member_keys m\n      where m.workspace_id = p_ws and m.epoch = p_epoch\n        and m.member_user_id = public.rout_current_user_id()\n        and exists (select 1 from public.workspace_members x\n                     where x.workspace_id = p_ws and x.user_id = m.member_user_id\n                       and x.role::text in ('owner', 'admin'))\n      limit 1),\n    pg_catalog.jsonb_build_object('ok', false, 'reason', 'none'))\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_member_revoke",
+      "args": "",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_member_revoke()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nbegin\n  if tg_op = 'DELETE' then\n    delete from public.workspace_member_keys\n     where workspace_id = old.workspace_id and member_user_id = old.user_id;\n    return old;\n  end if;\n  if new.role::text not in ('owner', 'admin') then\n    delete from public.workspace_member_keys\n     where workspace_id = new.workspace_id and member_user_id = new.user_id;\n  end if;\n  return new;\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_member_store",
+      "args": "p_ws uuid, p_epoch integer, p_member uuid, p_member_ref uuid, p_kid text, p_envelope text",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_member_store(p_ws uuid, p_epoch integer, p_member uuid, p_member_ref uuid, p_kid text, p_envelope text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nbegin\n  if not public.rout_ws_group_manager(p_ws) then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'forbidden'); end if;\n  if p_member is null or p_member_ref is null\n     or p_kid is null or p_kid !~ '^[A-Za-z0-9_-]{22}$'\n     or not public.rout_ws_group_envelope_ok(p_envelope, 'wsk') then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'invalid');\n  end if;\n  if not exists (select 1 from public.workspace_keys k\n                  where k.workspace_id = p_ws and k.epoch = p_epoch and k.status = 'active') then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'epoch');\n  end if;\n  if not exists (select 1 from public.workspace_members m\n                  where m.workspace_id = p_ws and m.user_id = p_member\n                    and m.role::text in ('owner', 'admin')) then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'forbidden');\n  end if;\n  insert into public.workspace_member_keys (workspace_id, epoch, member_user_id, member_ref, kid, envelope)\n  values (p_ws, p_epoch, p_member, p_member_ref, p_kid, p_envelope)\n  on conflict (workspace_id, epoch, member_user_id) do update\n    set member_ref = excluded.member_ref, kid = excluded.kid, envelope = excluded.envelope;\n  return pg_catalog.jsonb_build_object('ok', true);\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_publish",
+      "args": "p_ws uuid, p_epoch integer, p_public_key text, p_kid text",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_publish(p_ws uuid, p_epoch integer, p_public_key text, p_kid text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare v_max integer;\nbegin\n  if not public.rout_ws_group_manager(p_ws) then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'forbidden'); end if;\n  if p_epoch is null or p_epoch < 1\n     or p_public_key is null or p_public_key !~ '^[A-Za-z0-9_-]+$' or pg_catalog.length(p_public_key) <> 2134\n     or p_kid is null or p_kid !~ '^[A-Za-z0-9_-]{22}$' then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'invalid');\n  end if;\n  select coalesce(pg_catalog.max(epoch), 0) into v_max from public.workspace_keys where workspace_id = p_ws;\n  if p_epoch <> v_max + 1 then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'epoch'); end if;\n  update public.workspace_keys set status = 'retired', retired_at = pg_catalog.now()\n   where workspace_id = p_ws and status = 'active';\n  insert into public.workspace_keys (workspace_id, epoch, public_key, kid, status, created_by)\n  values (p_ws, p_epoch, p_public_key, p_kid, 'active', public.rout_current_user_id());\n  return pg_catalog.jsonb_build_object('ok', true, 'epoch', p_epoch);\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_group_state",
+      "args": "p_ws uuid",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_group_state(p_ws uuid)\n RETURNS jsonb\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select case when public.rout_ws_group_manager(p_ws) then pg_catalog.jsonb_build_object(\n    'epochs', coalesce((select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(\n        'epoch', k.epoch, 'status', k.status, 'kid', k.kid, 'publicKey', k.public_key,\n        'createdAt', k.created_at, 'retiredAt', k.retired_at,\n        'heldBy', (select pg_catalog.count(*) from public.workspace_member_keys m where m.workspace_id = k.workspace_id and m.epoch = k.epoch),\n        'missing', coalesce((select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('userId', x.user_id, 'role', x.role::text) order by x.user_id)\n                              from public.workspace_members x\n                             where x.workspace_id = p_ws and x.role::text in ('owner', 'admin')\n                               and not exists (select 1 from public.workspace_member_keys m\n                                                where m.workspace_id = k.workspace_id and m.epoch = k.epoch\n                                                  and m.member_user_id = x.user_id)), '[]'::jsonb)\n        ) order by k.epoch desc)\n       from public.workspace_keys k where k.workspace_id = p_ws), '[]'::jsonb))\n    else pg_catalog.jsonb_build_object('epochs', '[]'::jsonb) end\n$function$"
+    },
+    {
+      "schema": "public",
       "name": "rout_ws_psp_delete",
       "args": "p_ws uuid, p_provider text",
       "def": "CREATE OR REPLACE FUNCTION public.rout_ws_psp_delete(p_ws uuid, p_provider text)\n RETURNS text\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nbegin\n  if not public.rout_ws_support_manager(p_ws) then return 'forbidden'; end if;\n  delete from public.workspace_psp_credentials where workspace_id = p_ws and provider = p_provider;\n  return 'ok';\nend $function$"
@@ -34410,6 +35130,36 @@
       "name": "rout_ws_psp_tip_credential",
       "args": "p_slug text, p_provider text",
       "def": "CREATE OR REPLACE FUNCTION public.rout_ws_psp_tip_credential(p_slug text, p_provider text)\n RETURNS TABLE(workspace_id uuid, ciphertext text, iv text, publishable_key text)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select c.workspace_id, c.ciphertext, c.iv, c.publishable_key\n    from public.rout_public_ws_support(p_slug) p\n    join public.workspace_psp_credentials c on c.workspace_id = p.workspace_id and c.provider = p_provider\n   where p_provider = any (p.providers)\n   limit 1\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_question_create",
+      "args": "p_slug text, p_payload_id uuid, p_epoch integer, p_envelope text, p_hash bytea, p_pow_nonce text, p_epoch_bucket integer, p_guest_public_key text, p_token_hash bytea",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_question_create(p_slug text, p_payload_id uuid, p_epoch integer, p_envelope text, p_hash bytea, p_pow_nonce text, p_epoch_bucket integer, p_guest_public_key text, p_token_hash bytea)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare v_ws uuid; v_kid text; v_id uuid;\nbegin\n  if p_slug is null or p_payload_id is null or p_epoch is null\n     or not public.rout_ws_group_envelope_ok(p_envelope, 'wq')\n     or p_hash is null or pg_catalog.octet_length(p_hash) <> 32\n     or p_pow_nonce is null or p_pow_nonce !~ '^[0-9a-f]{16}$'\n     or p_guest_public_key is null or p_guest_public_key !~ '^[A-Za-z0-9_-]+$'\n     or pg_catalog.length(p_guest_public_key) <> 2134\n     or p_token_hash is null or pg_catalog.octet_length(p_token_hash) <> 32 then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'invalid');\n  end if;\n  if not public.rout_ws_group_epoch_ok(p_epoch_bucket) then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'pow_stale');\n  end if;\n  select k.workspace_id, k.kid into v_ws, v_kid\n    from public.workspaces w\n    join public.workspace_ask_settings s on s.workspace_id = w.id and s.enabled\n    join public.workspace_keys k on k.workspace_id = w.id and k.status = 'active'\n   where w.slug = pg_catalog.lower(p_slug)\n   limit 1;\n  if v_ws is null then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'unavailable'); end if;\n  -- The envelope must carry the epoch the visitor was actually shown: the live one. A retired\n  -- epoch is closed to new questions, so an old key can never collect fresh ciphertext.\n  -- Which key that epoch holds is checked by the server on the envelope header first, as in db/0278.\n  if not exists (select 1 from public.workspace_keys k\n                  where k.workspace_id = v_ws and k.epoch = p_epoch and k.status = 'active') then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'epoch');\n  end if;\n  -- Flood ceiling on top of the proof-of-work.\n  if (select pg_catalog.count(*) from public.workspace_questions q\n       where q.workspace_id = v_ws and q.created_at > pg_catalog.now() - interval '1 hour') >= 30 then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'rate_limited');\n  end if;\n  begin\n    insert into public.workspace_questions (workspace_id, epoch, payload_id, envelope,\n      blake3_payload_hash, pow_nonce, epoch_bucket, guest_public_key, token_hash)\n    values (v_ws, p_epoch, p_payload_id, p_envelope,\n      p_hash, p_pow_nonce, p_epoch_bucket, p_guest_public_key, p_token_hash)\n    returning id into v_id;\n  exception when unique_violation then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'duplicate');\n  end;\n  return pg_catalog.jsonb_build_object('ok', true, 'id', v_id);\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_question_decline",
+      "args": "p_question_id uuid",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_question_decline(p_question_id uuid)\n RETURNS text\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare v_ws uuid;\nbegin\n  select q.workspace_id into v_ws from public.workspace_questions q where q.id = p_question_id;\n  if v_ws is null then return 'invalid'; end if;\n  if not public.rout_ws_group_manager(v_ws) then return 'forbidden'; end if;\n  update public.workspace_questions set status = 'declined', answered_at = pg_catalog.now()\n   where id = p_question_id and status <> 'published';\n  return 'ok';\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_question_list",
+      "args": "p_ws uuid",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_question_list(p_ws uuid)\n RETURNS TABLE(id uuid, epoch integer, payload_id uuid, status text, created_at timestamp with time zone, answered_at timestamp with time zone, envelope text, kid text, guest_public_key text, has_reply boolean)\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nbegin\n  if not public.rout_ws_group_manager(p_ws) then return; end if;\n  return query\n  select q.id, q.epoch, q.payload_id, q.status, q.created_at, q.answered_at, q.envelope,\n         k.kid, q.guest_public_key, (r.question_id is not null)\n    from public.workspace_questions q\n    join public.workspace_keys k on k.workspace_id = q.workspace_id and k.epoch = q.epoch\n    left join public.workspace_question_replies r on r.question_id = q.id\n   where q.workspace_id = p_ws\n   order by q.created_at desc;\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_question_publish",
+      "args": "p_question_id uuid, p_question_text text, p_answer_text text",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_question_publish(p_question_id uuid, p_question_text text, p_answer_text text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare v_ws uuid;\nbegin\n  if p_question_id is null\n     or p_question_text is null or pg_catalog.char_length(p_question_text) not between 1 and 2000\n     or p_answer_text is null or pg_catalog.char_length(p_answer_text) not between 1 and 4000 then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'invalid');\n  end if;\n  select q.workspace_id into v_ws from public.workspace_questions q where q.id = p_question_id;\n  if v_ws is null then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'invalid'); end if;\n  if not public.rout_ws_group_manager(v_ws) then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'forbidden'); end if;\n  insert into public.workspace_faq_items (workspace_id, question_id, question_text, answer_text, published_by)\n  values (v_ws, p_question_id, p_question_text, p_answer_text, public.rout_current_user_id())\n  on conflict (question_id) do update set question_text = excluded.question_text,\n    answer_text = excluded.answer_text, published_by = excluded.published_by, published_at = pg_catalog.now();\n  update public.workspace_questions set status = 'published' where id = p_question_id;\n  return pg_catalog.jsonb_build_object('ok', true);\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_ws_question_reply",
+      "args": "p_question_id uuid, p_envelope text, p_hash bytea",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_ws_question_reply(p_question_id uuid, p_envelope text, p_hash bytea)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare v_ws uuid; v_status text;\nbegin\n  if p_question_id is null or not public.rout_ws_group_envelope_ok(p_envelope, 'wa')\n     or p_hash is null or pg_catalog.octet_length(p_hash) <> 32 then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'invalid');\n  end if;\n  select q.workspace_id, q.status into v_ws, v_status from public.workspace_questions q where q.id = p_question_id;\n  if v_ws is null then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'invalid'); end if;\n  if not public.rout_ws_group_manager(v_ws) then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'forbidden'); end if;\n  if v_status = 'declined' then return pg_catalog.jsonb_build_object('ok', false, 'reason', 'declined'); end if;\n  begin\n    insert into public.workspace_question_replies (question_id, envelope, blake3_payload_hash, replied_by)\n    values (p_question_id, p_envelope, p_hash, public.rout_current_user_id())\n    on conflict (question_id) do update set envelope = excluded.envelope,\n      blake3_payload_hash = excluded.blake3_payload_hash, replied_by = excluded.replied_by,\n      created_at = pg_catalog.now();\n  exception when unique_violation then\n    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'duplicate');\n  end;\n  update public.workspace_questions set status = 'answered', answered_at = pg_catalog.now() where id = p_question_id;\n  return pg_catalog.jsonb_build_object('ok', true);\nend $function$"
     },
     {
       "schema": "public",
