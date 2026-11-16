@@ -15,7 +15,9 @@
 -- call a trigger function directly and does not check EXECUTE when a trigger fires, so the
 -- grants 0260 recorded (rout_app on all four, PUBLIC on two) only broke the rule that
 -- trigger-only definers carry no EXECUTE for PUBLIC or rout_app. Revoked here; the triggers
--- keep firing for rout_app (src/test/migration-0286.test.ts fires each one as rout_app).
+-- keep firing for rout_app (src/test/migration-0286.test.ts proves a trigger fires for rout_app
+-- without EXECUTE). rout_shadow_mute_trust has no trigger since 0183 dropped it and nothing
+-- calls it, so on Neon it was a PUBLIC-callable orphan definer (verified read-only 2026-11-16).
 --
 -- No table, column, policy or function body changes. Rollback: drop the indexes and
 -- re-grant per 0260 (db-pending/0286_fk_indexes_trigger_rights_rollback.sql).

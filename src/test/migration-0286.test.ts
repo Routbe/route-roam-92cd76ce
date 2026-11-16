@@ -50,12 +50,13 @@ describe("db/0286 foreign-key indexes and trigger rights", () => {
     }
   });
 
-  it("keeps each of those triggers attached and enabled", async () => {
+  it("keeps three of those triggers attached and enabled; rout_shadow_mute_trust has had none since 0183", async () => {
     const r = await db.query<{ fn: string }>(
       `select distinct t.tgfoid::regprocedure::text as fn from pg_trigger t
         where not t.tgisinternal and t.tgenabled <> 'D' and t.tgfoid = any($1::regprocedure[]) order by 1`,
       [TRIGGER_DEFINERS]);
-    expect(r.rows.map((x) => `public.${x.fn.replace(/^public\./, "")}`).sort()).toEqual([...TRIGGER_DEFINERS].sort());
+    expect(r.rows.map((x) => `public.${x.fn.replace(/^public\./, "")}`).sort()).toEqual(
+      TRIGGER_DEFINERS.filter((f) => f !== "public.rout_shadow_mute_trust()"));
   });
 
   it("fires a trigger for rout_app even though rout_app may not execute its function", async () => {
