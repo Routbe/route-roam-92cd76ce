@@ -326,6 +326,9 @@
 - [ ] Fase 2: /w/:slug/ask (anoniem, RVE1 in de browser, #token=) + inbox met privé/FAQ-antwoord
 
 ## Owner directive 2026-11-16 23:20 — after live Neon audit (HANDOVER appendix)
-- [ ] A3 + A2: db/0286 additive — revoke PUBLIC/rout_app EXECUTE on trigger-only definers; index the 47 unindexed foreign keys (live only after owner GO)
-- [ ] Workspace manager inbox: key init, list, decrypt in worker, private reply, publish to FAQ, decline
+- [x] A3 + A2: db/0286 written + offline tested (47 FK indexes, trigger-only definers closed, rollback in db-pending), schema level 0286
+- [ ] GO owner: apply 0286 on Neon via scripts/migration-rollout.ts — app code now reports 0286, so deploy only after it is live
+- [x] Workspace manager inbox on workspace settings: key init/rotate (atomic), list, decrypt in worker, private reply, publish to FAQ, decline (nl/en/fr/de, offline SQL test)
+- [ ] Inbox: share the workspace key with other owners/admins — needs a published device public key per member (no such registry yet; owner decision)
+- [ ] Inbox live click-through — needs DATABASE_URL in an environment
 - [ ] A1 profile privacy: EXPAND (definers for moderation/Stripe/VAT reads, code moved) then CONTRACT in db-pending revoking those columns from rout_app
