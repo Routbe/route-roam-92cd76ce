@@ -7,7 +7,7 @@
 import { runBatch, runQuery } from "@/lib/neon";
 import { b64uDecode } from "@/lib/booking-engine/sealed-booking";
 import { bytesToHex } from "@/lib/booking-engine/sealed-schema.server";
-import { ASK_SAVE, DECLINE, KEY_INIT, MEMBER_KEY, PUBLISH, QUESTIONS, REPLY, STATE } from "./workspace-inbox-sql";
+import { ASK_KEY, ASK_SAVE, DECLINE, KEY_INIT, MEMBER_KEY, PUBLISH, QUESTIONS, REPLY, ROLE, STATE } from "./workspace-inbox-sql";
 
 type Row = Record<string, unknown>;
 export type WsInboxEpoch = { epoch: number; status: "active" | "retired"; kid: string; heldBy: number; missing: { userId: string; role: string }[] };
@@ -32,15 +32,17 @@ const iso = (v: unknown): string | null => (v == null ? null : v instanceof Date
  * The inbox for one workspace: key epochs, the caller's own sealed workspace keys and the
  * sealed questions. `forbidden` for anyone who is not owner or admin there.
  */
-export async function readWsInbox(userId: string, workspaceId: string, isManager: boolean): Promise<WsInbox> {
-  if (!isManager) return { ok: false, reason: "forbidden" };
+export async function readWsInbox(userId: string, workspaceId: string, slug: string): Promise<WsInbox> {
   try {
-    const [state, questions, enabled] = await runBatch([
+    const [role, state, questions, ask] = await runBatch([
+      { query: ROLE, params: [workspaceId] },
       { query: STATE, params: [workspaceId] },
       { query: QUESTIONS, params: [workspaceId] },
-      { query: "select coalesce((select public.rout_ws_group_state($1::uuid) is not null), false) as ok", params: [workspaceId] },
+      { query: ASK_KEY, params: [slug] },
     ]);
-    void enabled;
+    const myRole = String(role?.rows[0]?.["r"] ?? "");
+    if (myRole !== "owner" && myRole !== "admin") return { ok: false, reason: "forbidden" };
+    const askKey = ask?.rows[0]?.["r"] as { workspaceId?: string } | null | undefined;
     const epochs = ((state?.rows[0]?.["r"] as { epochs?: Row[] } | undefined)?.epochs ?? []).map((e) => ({
       epoch: Number(e["epoch"]),
       status: e["status"] === "active" ? "active" as const : "retired" as const,
@@ -56,11 +58,10 @@ export async function readWsInbox(userId: string, workspaceId: string, isManager
       const r = res.rows[0]?.["r"] as { ok?: boolean; envelope?: string; memberRef?: string } | undefined;
       if (r?.ok && r.envelope && r.memberRef) ownKeys.push({ epoch: epochs[i]!.epoch, envelope: r.envelope, memberRef: r.memberRef });
     });
-    const askOn = await readAskEnabled(workspaceId);
     return {
       ok: true,
       userId,
-      enabled: askOn,
+      enabled: askKey?.workspaceId === workspaceId,
       epochs,
       ownKeys,
       questions: (questions?.rows ?? []).map((q) => ({
@@ -79,15 +80,6 @@ export async function readWsInbox(userId: string, workspaceId: string, isManager
     console.warn("[ws-inbox] unavailable", error instanceof Error ? error.message : "error");
     return { ok: false, reason: "unavailable" };
   }
-}
-
-/** Whether the public ask page is switched on: the public key lookup answers only then. */
-async function readAskEnabled(workspaceId: string): Promise<boolean> {
-  const r = await runQuery(
-    "select public.rout_public_ws_ask_key((select slug from public.rout_public_workspace_slug($1::uuid))) is not null as ok",
-    [workspaceId],
-  ).catch(() => null);
-  return r?.rows[0]?.["ok"] === true;
 }
 
 /** First key (or a rotation): next epoch, published and held by the caller in one transaction. */

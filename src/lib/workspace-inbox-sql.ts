@@ -13,6 +13,9 @@ export const KEY_INIT: readonly string[] = [
   "select 1 / ((public.rout_ws_group_member_key($1::uuid, $2::int) ->> 'ok')::boolean::int) as held",
 ];
 
+export const ROLE = "select public.rout_workspace_role($1::uuid)::text as r";
+/** The public ask key answers only while the page is switched on and a live key exists. */
+export const ASK_KEY = "select public.rout_public_ws_ask_key($1) as r";
 export const STATE = "select public.rout_ws_group_state($1::uuid) as r";
 export const MEMBER_KEY = "select public.rout_ws_group_member_key($1::uuid, $2::int) as r";
 export const QUESTIONS = "select * from public.rout_ws_question_list($1::uuid)";
