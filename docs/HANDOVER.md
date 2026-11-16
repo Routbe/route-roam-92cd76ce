@@ -862,3 +862,10 @@ On the owner's decision the held-back booking ledger is now `db-pending/0284_boo
 - `src/lib/neon.ts` connects only through `DATABASE_URL` with the `postgres` driver and TLS forced (`ssl: "require"`); the `LOVABLE_API_KEY`/`NEON_API_KEY` path is gone. The role step-down, context and role guard prefix is unchanged.
 - Admin scripts use `scripts/db-direct.ts` (MIGRATION_URL, else DATABASE_URL, TLS). `migration-rollout.ts --apply` runs the same checked batch directly.
 - Lovable preview hosts are allowed for OAuth redirects, trusted origins and framing only when `NODE_ENV === "development"`. `public/lovable-customization.js`, the Lovable error reporter and `LOVABLE_CRON_SECRET` are removed.
+
+## Appendix: status at handover for own-infrastructure deployment (2026-11-16 23:00 UTC)
+- Neon: 279 rows in `public.schema_migrations`, latest 0285 (checksum `8e17a9fbe0746977ece22a5680c8fafdacba522862d3a2e3b2a7980139789d21`); `CODE_SCHEMA_LEVEL` = 0285, so code and database are level.
+- Build: `bun run build` writes a self-contained `dist/` (Nitro `node-server` by default, every package bundled, no `node_modules` or symlinks in the output); start with `bun run start` / `node dist/server/index.mjs`. `NITRO_PRESET` selects another target. Verified locally: the built server starts and serves `/` and `/about` with HTTP 200.
+- Runtime needs `DATABASE_URL` and `CRON_SECRET` (plus the service keys in ENVIRONMENT.md); admin scripts need `MIGRATION_URL`. No Lovable key, proxy or cron secret is read anywhere in app or scripts.
+- Tests: full Vitest suite 545 files passed, 4 skipped, 0 failed. `book-sealed.test.ts` now allows 30 s per test because each test solves a real proof-of-work.
+- Still outside the code: the Neon connection used by the agent remains linked to the Lovable project at the owner's choice (the app never uses it); production must be redeployed on the owner's own host with the secrets above; the workspace manager inbox (section 5 of the brief) is not built yet.

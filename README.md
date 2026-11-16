@@ -404,7 +404,8 @@ Without a database the public marketing pages, QR Studio and documentation still
 | Command | What it does |
 |---|---|
 | `bun run dev` | Start the dev server with SSR and hot reload |
-| `bun run build` | Production build (Nitro, Cloudflare Workers target by default) |
+| `bun run build` | Production build (Nitro, `node-server` target by default; override with `NITRO_PRESET`) into `dist/` |
+| `bun run start` | Run the production build: `node dist/server/index.mjs` (`PORT`, `HOST`) |
 | `bun run build:dev` | Development-mode build |
 | `bun run preview` | Serve the production build locally |
 | `bun run test` | Run the full Vitest suite once |
@@ -479,7 +480,7 @@ Without a database the public marketing pages, QR Studio and documentation still
 - `0000_baseline.sql` covers every migration up to **110**. On an empty database the planner runs the baseline and marks the covered files as applied. On an existing database it records the baseline and runs only the outstanding deltas (`scripts/migration-plan.ts`).
 - `db/baseline-seed.sql` seeds reference rows only: pricing configuration, a promo code, a badge and the first-party PKCE client `rout_native_self`. It contains no member accounts.
 - Better Auth stores its own tables in the `neon_auth` schema.
-- Migrations are **reviewed and applied by a human** with an owner credential: `bun scripts/migrate.ts`, `bun scripts/migrate-gateway.ts`, or the Neon SQL editor. Builds and deploys never run them.
+- Migrations are **reviewed and applied by a human** with an owner credential: `bun scripts/migration-rollout.ts <file> --after=<previous> --apply` (with `MIGRATION_URL`), `bun scripts/migrate.ts`, or the Neon SQL editor. Builds and deploys never run them.
 
 ### Roles
 
@@ -631,8 +632,9 @@ The app builds with **Nitro**:
 
 | Target | How |
 |---|---|
-| **Cloudflare Workers** (default) | `bun run build`. The output targets an edge (workerd) runtime. |
-| **Vercel** | Set `VERCEL=1` during the build, which selects Nitro's `vercel` preset (`vite.config.ts`). |
+| **Own server / container** (default) | `bun run build`, then `bun run start` (= `node dist/server/index.mjs`). Every package is bundled into `dist/`, so the folder runs on its own with Node 22+; copy only `dist/` into the image. |
+| **Vercel** | `bun run build:vercel` (sets `NITRO_PRESET=vercel`). |
+| **Other hosts** | Any Nitro preset via `NITRO_PRESET=<preset> bun run build`. |
 | **Omni worker** | Separate Docker image on a persistent host (`worker/Dockerfile`). |
 
 ### Release checklist
