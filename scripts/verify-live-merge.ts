@@ -16,21 +16,16 @@ export async function main() {
  const gateway = process.argv.includes("--gateway");
  const grantsOnly = process.argv.includes("--grants-only");
  if (gateway) {
-  const key = process.env.LOVABLE_API_KEY, connection = process.env.NEON_API_KEY;
-  if (!key || !connection) throw new Error("Neon connector unavailable");
-  const response = await fetch("https://connector-gateway.lovable.dev/neon/sql", {
-   method: "POST", headers: { Authorization: `Bearer ${key}`, "X-Connection-Api-Key": connection, "Content-Type": "application/json" },
-   body: JSON.stringify({ queries: [
-    { query: "set transaction read only", params: [] },
+  const { sqlRequest, closeDirect } = await import("./db-direct");
+  let result: unknown;
+  try {
+   result = await sqlRequest({ queries: [
     { query: RELEASE, params: [] },
     ...(grantsOnly ? [{ query: GRANTS, params: [] }] : [{ query: "set local role rout_merge_executor", params: [] }, { query: MERGE_PROBE, params: [] }]),
-   ] }),
-  });
-  if (!response.ok) {
-   const error = await response.json() as { code?: string };
-   throw new Error(`Live probe failed: HTTP ${response.status}, SQLSTATE ${error.code ?? "unknown"}. No privileges changed. --grants-only checks rights, not execution.`);
-  }
-  const result = await response.json();
+   ] }, { readOnly: true });
+  } catch (e) {
+   throw new Error(`Live probe failed: SQLSTATE ${(e as { code?: string }).code ?? "unknown"}. No privileges changed. --grants-only checks rights, not execution.`);
+  } finally { await closeDirect(); }
   const text = JSON.stringify(result);
   if (!text.includes('"released":true') || !(grantsOnly ? text.includes('"grants":6') : text.includes('"role":"rout_merge_executor"'))) throw new Error("0277 or executor rights not confirmed");
   console.log(grantsOnly ? "Live 0277 fingerprint verified; 6/6 EXECUTE rights confirmed. Execution as executor NOT tested." : "Live 0277 fingerprint verified; all six helpers executed as rout_merge_executor (read-only, anonymous scope). No accounts merged.");

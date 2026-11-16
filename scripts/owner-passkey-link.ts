@@ -26,8 +26,8 @@ const owners = (process.env["OWNER_EMAILS"] ?? process.env["ADMIN_EMAIL"] ?? "ha
   .map((v) => v.trim().toLowerCase())
   .filter((v) => v.includes("@"));
 
-if (!process.env["LOVABLE_API_KEY"] || !process.env["NEON_API_KEY"]) {
-  console.error("Missing LOVABLE_API_KEY or NEON_API_KEY.");
+if (!process.env["MIGRATION_URL"] && !process.env["DATABASE_URL"]) {
+  console.error("Missing MIGRATION_URL.");
   process.exit(1);
 }
 if (!email || !owners.includes(email)) {
