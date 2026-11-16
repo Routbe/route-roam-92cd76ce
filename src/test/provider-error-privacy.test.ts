@@ -1,5 +1,7 @@
 // @vitest-environment node
 import { afterEach, expect, it, vi } from "vitest";
+const { postgresMock } = vi.hoisted(() => ({ postgresMock: vi.fn() }));
+vi.mock("postgres", () => ({ default: postgresMock }));
 import { runQuery } from "@/lib/neon";
 import { notifyKchat } from "@/lib/contact.server";
 
@@ -7,8 +9,9 @@ vi.mock("@/lib/webhook-transport.server", () => ({ recordOutboundWebhook: vi.fn(
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 it("does not expose database provider messages containing personal data", async () => {
-  vi.stubEnv("LOVABLE_API_KEY", "test-only"); vi.stubEnv("NEON_API_KEY", "test-only");
-  vi.stubGlobal("fetch", vi.fn(async () => Response.json({ code: "23505", message: "jan@example.com PRIVATE_CONTACT_TEXT" }, { status: 400 })));
+  vi.stubEnv("DATABASE_URL", "postgresql://u:p@ep-privacy.neon.tech/db");
+  const fail = async () => { throw Object.assign(new Error("jan@example.com PRIVATE_CONTACT_TEXT"), { code: "23505" }); };
+  postgresMock.mockReturnValue({ begin: fail, unsafe: fail, end: vi.fn() });
   const log = vi.spyOn(console, "error").mockImplementation(() => {});
   await expect(runQuery("select 1")).rejects.toThrow("Er is een tijdelijk verbindingsprobleem opgetreden.");
   expect(JSON.stringify(log.mock.calls)).not.toContain("jan@example.com");

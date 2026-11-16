@@ -3,8 +3,7 @@ import { hasDatabase } from "@/lib/neon";
 import { createRoutAuth } from "@/lib/better-auth.server";
 
 /**
- * Vercel deploys only set DATABASE_URL (no Lovable connector keys). Sign-in
- * must start with either transport and refuse clearly when neither exists.
+ * Sign-in uses DATABASE_URL only; vendor connector keys are never a database.
  */
 
 function setEnv(values: Record<string, string>) {
@@ -21,9 +20,9 @@ describe("database transport for sign-in", () => {
     expect(() => createRoutAuth(new Request("https://rout.be/api/auth/get-session"))).not.toThrow();
   });
 
-  it("the Neon connector alone (Lovable preview) counts as a configured database", () => {
+  it("Lovable connector keys alone are not a database", () => {
     setEnv({ NEON_API_KEY: "lovc_test", LOVABLE_API_KEY: "lov_test" });
-    expect(hasDatabase()).toBe(true);
+    expect(hasDatabase()).toBe(false);
   });
 
   it("only one connector key is not enough", () => {
