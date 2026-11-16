@@ -34,6 +34,9 @@ const proofFor = (hosts: Record<string, string>, now = Date.now()) =>
   solveSealedPow("booking", PID, Object.entries(hosts).map(([r, e]) => ({ ref: r, envelope: b64uDecode(e)! })), now);
 const request = (hosts: Record<string, string>, pow = proofFor(hosts)) => ({ eventTypeId: ET, startUtc: "2026-12-01T10:00:00.000Z", guestTimezone: "Europe/Brussels", sealed: { pid: PID, hosts }, pow });
 
+// Every test solves a real proof-of-work; under full-suite CPU load 5 s is not enough.
+vi.setConfig({ testTimeout: 30_000 });
+
 beforeEach(() => { calls.length = 0; failWith = null; schema.ready = true; lookups.eventType = 0; });
 
 describe("booking create refuses plaintext guest details", () => {
