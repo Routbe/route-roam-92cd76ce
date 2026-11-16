@@ -74,7 +74,7 @@ export default defineConfig(({ command, mode }) => {
         // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
         server: { entry: "server" },
       }),
-      ...(command === "build" ? [nitro({ preset: process.env["NITRO_PRESET"] || "node-server" })] : []),
+      ...(command === "build" ? [nitro({ preset: process.env["NITRO_PRESET"] || "node-server", output: { dir: "dist" } })] : []),
       viteReact(),
       docsCatalogPlugin,
       mdx({ include: /\.mdx$/, providerImportSource: "@mdx-js/react", remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm] }),
