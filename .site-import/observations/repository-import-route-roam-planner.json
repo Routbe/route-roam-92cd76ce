@@ -1,0 +1,16 @@
+{
+  "source": "https://github.com/Routbe/route-roam-planner-5f7c56e2",
+  "kind": "source-repository",
+  "permissionConfirmed": true,
+  "excluded": [".git", "node_modules", ".lovable/project.json (kept this project's)"],
+  "credentialsCopied": false,
+  "databaseMigrationsApplied": false,
+  "checks": [
+    {"route": "/", "layout": "desktop", "viewport": {"width": 1280, "height": 1800}, "trigger": "page load", "observed": "home renders with hero, standards strip and steps; no console errors", "status": "passed", "screenshot": "/tmp/browser/repo/screenshots/desktop_home.png"},
+    {"route": "/", "layout": "desktop", "viewport": {"width": 1280, "height": 1800}, "trigger": "Open menu, then Escape", "observed": "platform menu lists 8 tools (QR generator -> /discover/qr-studio ...); Escape closes", "status": "passed"},
+    {"route": "/", "layout": "phone", "viewport": {"width": 390, "height": 844}, "trigger": "page load", "observed": "home renders; one hydration warning about caret-color on the command input (present in source)", "status": "passed", "screenshot": "/tmp/browser/repo/screenshots/phone_home.png"},
+    {"route": "/", "layout": "phone", "viewport": {"width": 390, "height": 844}, "trigger": "Open menu, then Escape", "observed": "menu opens with same links and closes", "status": "passed"},
+    {"route": "/discover/qr-studio, /about, /self-hosting, /dashboard", "trigger": "direct load", "observed": "HTTP 200", "status": "passed"},
+    {"route": "sign-in and account pages", "trigger": "session check", "observed": "server logs: no runtime database configured (DATABASE_URL secret not set)", "status": "blocked"}
+  ]
+}
