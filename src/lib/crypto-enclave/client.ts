@@ -362,6 +362,22 @@ export const enclave = {
       callEnclave("wsQuestion.seal", { workspaceId, epoch, workspacePublicKey: workspacePublicKey.slice(), text }),
     openAnswer: (token: string, envelope: Uint8Array) => callEnclave("wsAnswer.open", { token, envelope }, moved(envelope)),
   },
+  /** Manager side of the anonymous questions (db/0285): the workspace secret stays in the worker. */
+  workspaceInbox: {
+    /** A new workspace key for `epoch`, sealed to this manager's own device key. */
+    generate: (workspaceId: string, epoch: number, self: { memberRef: string; publicKey: Uint8Array }) =>
+      callEnclave("wsGroup.generate", { workspaceId, epoch, self: { memberRef: self.memberRef, publicKey: self.publicKey.slice() } }),
+    /** Question texts of one epoch; a row that does not open is null. Keep texts out of caches and logs. */
+    open: (userId: string, workspaceId: string, epoch: number, own: { envelope: Uint8Array; memberRef: string }, items: { payloadId: string; envelope: Uint8Array }[]) =>
+      callEnclave("wsQuestion.open", {
+        userId, workspaceId, epoch,
+        own: { envelope: own.envelope.slice(), memberRef: own.memberRef },
+        items: items.map((i) => ({ payloadId: i.payloadId, envelope: i.envelope.slice() })),
+      }),
+    /** One private answer sealed to the visitor's reply key. */
+    sealAnswer: (replyPublicKey: Uint8Array, question: string, answer: string) =>
+      callEnclave("wsAnswer.seal", { replyPublicKey: replyPublicKey.slice(), question, answer }),
+  },
   hash: {
     sha256Hex: (text: string) => callEnclave("hash.sha256Hex", { text }),
   },
