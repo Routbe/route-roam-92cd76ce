@@ -11,6 +11,7 @@ import { ScopeActivationState, isForbidden } from "@/components/workspace/ScopeA
 import { WorkspaceIconPicker } from "@/components/workspace/WorkspaceIconPicker";
 import { RolesOverview } from "@/components/workspace/RolesOverview";
 import { WorkspaceSupportCard } from "@/components/workspace/WorkspaceSupportCard";
+import { WorkspaceAskInbox } from "@/components/workspace/WorkspaceAskInbox";
 import { isWorkspaceIconKey } from "@/lib/workspace-icons";
 import {
   activateScopeFromUrl, setWorkspaceIcon, deleteWorkspace,
@@ -118,6 +119,8 @@ function WorkspaceSettingsPage() {
       <RolesOverview myRole={ws.role} />
 
       {manage && <WorkspaceSupportCard workspaceId={ws.id} slug={ws.slug} />}
+
+      {manage && <WorkspaceAskInbox workspaceId={ws.id} slug={ws.slug} />}
 
       <section className={card}>
         <h2 className="font-medium">Developer Console &amp; API</h2>

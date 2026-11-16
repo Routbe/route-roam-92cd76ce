@@ -89,7 +89,7 @@ export function BookingKeyBanner({ state, onRetry, onReplace }: { state: KeyStat
  * paths; nothing here creates or moves key material (that stays in the enclave
  * worker behind the recovery ceremony).
  */
-function MasterKeyRecoveryCard({ onRetry }: { onRetry: () => void }) {
+export function MasterKeyRecoveryCard({ onRetry }: { onRetry: () => void }) {
   const { t } = useI18n();
   return (
     <section aria-labelledby="master-key-recovery-title" className="rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-5">
