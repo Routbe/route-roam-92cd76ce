@@ -76,10 +76,7 @@ use the editor.
 - The free `rout_server` policies from db/0154 are removed table by table, only after every runtime read/write is moved into the owner's context or a narrow SECURITY DEFINER function; account purge deletes rely on `public.rout_purge_due(user_id)`. Why: dropping them all at once stops sign-in, payments and admin, and the purge runs without a member context.
 
 ## Neon database access
-- The app runtime connects only through DATABASE_URL (rout_app login) with the standard postgres driver and TLS forced; admin scripts connect through scripts/db-direct.ts (MIGRATION_URL, else DATABASE_URL). No vendor proxy or connector key is a database path. Why: the owner runs everything on their own infrastructure.
-
-## Build target
-- vite.config.ts uses only standard TanStack Start/Vite/Nitro plugins and the server target comes from NITRO_PRESET (default node-server). Why: no hosting vendor may be assumed by the build.
+- Runtime DB = DATABASE_URL only (postgres driver, TLS forced); scripts use scripts/db-direct.ts; build targets NITRO_PRESET (default node-server). Why: owner runs on own infrastructure, no vendor path.
 
 ## Migration history
 - Every row in public.schema_migrations must match a file in db/ or an entry in scripts/migration-history-allowlist.ts carrying Neon's exact checksum; check with scripts/migration-history-check.ts and never rewrite Neon's rows. Why: history drift stays visible without falsifying what actually ran.
