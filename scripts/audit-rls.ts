@@ -5,20 +5,14 @@
  *
  *   MIGRATION_URL=... bun scripts/audit-rls.ts
  */
+import { closeDirect, sqlRequest } from "./db-direct";
 import { writeFileSync } from "node:fs";
 import { RLS_AUDIT_QUERY, auditFailures, type AuditTable } from "./rls-audit-query";
-const key = process.env.NEON_API_KEY;
-const token = process.env.LOVABLE_API_KEY;
-if (!key || !token) throw new Error("Linked Neon credentials missing.");
-const response = await fetch("https://connector-gateway.lovable.dev/neon/sql", {
-  method: "POST", headers: { Authorization: `Bearer ${token}`, "X-Connection-Api-Key": key, "Content-Type": "application/json", "Neon-Batch-Read-Only": "true" },
-  body: JSON.stringify({ queries: [
-    { query: RLS_AUDIT_QUERY, params: [] },
-    { query: "select rolname, rolbypassrls from pg_roles where rolname in ('rout_app','neondb_owner')", params: [] },
-  ] }),
-});
-if (!response.ok) throw new Error(`Audit unavailable (${response.status}).`);
-const data = await response.json();
+const data = await sqlRequest({ queries: [
+  { query: RLS_AUDIT_QUERY, params: [] },
+  { query: "select rolname, rolbypassrls from pg_roles where rolname in ('rout_app','neondb_owner')", params: [] },
+] }, { readOnly: true }) as any;
+await closeDirect();
 const tables = data.results[0].rows as AuditTable[];
 const roles = data.results[1].rows.filter((r: { rolbypassrls: boolean }) => r.rolbypassrls).map((r: { rolname: string }) => r.rolname);
 const failures = auditFailures(tables, roles.filter((role: string) => role === "rout_app"));

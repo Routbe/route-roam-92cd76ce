@@ -2,12 +2,13 @@
  * Checks every row of public.schema_migrations against db/ and the
  * acknowledged list (scripts/migration-history-allowlist.ts). Read-only.
  *
- *   bun scripts/migration-history-check.ts                     live (MIGRATION_URL, else Lovable Neon gateway)
+ *   bun scripts/migration-history-check.ts                     live (MIGRATION_URL, else DATABASE_URL)
  *   bun scripts/migration-history-check.ts --applied=rows.json  offline, rows exported as [{filename, checksum}]
  *
  * Exit 1 when any row is unexplained. Pending files (not applied yet) are listed, not failed.
- * DATABASE_URL (rout_app) is not used: that role has no rights on schema_migrations.
+ * Use the owner login in MIGRATION_URL: rout_app has no rights on schema_migrations.
  */
+import { closeDirect, sqlRequest } from "./db-direct";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ACKNOWLEDGED_HISTORY } from "./migration-history-allowlist";
@@ -18,31 +19,11 @@ const QUERY = "select filename, checksum from public.schema_migrations order by 
 async function readApplied(): Promise<AppliedMigration[]> {
   const fromFile = process.argv.find((a) => a.startsWith("--applied="))?.slice(10);
   if (fromFile) return JSON.parse(readFileSync(fromFile, "utf8")) as AppliedMigration[];
-  const url = process.env["MIGRATION_URL"];
-  if (url) {
-    const { Pool } = await import("@neondatabase/serverless");
-    const pool = new Pool({ connectionString: url });
-    try {
-      return (await pool.query<AppliedMigration>(QUERY)).rows;
-    } finally {
-      await pool.end();
-    }
+  try {
+    return (await sqlRequest({ query: QUERY })).rows as AppliedMigration[];
+  } finally {
+    await closeDirect();
   }
-  if (!process.env["LOVABLE_API_KEY"] || !process.env["NEON_API_KEY"]) {
-    throw new Error("Geen databaseverbinding: zet MIGRATION_URL, LOVABLE_API_KEY + NEON_API_KEY, of gebruik --applied=<bestand>.");
-  }
-  const res = await fetch("https://connector-gateway.lovable.dev/neon/sql", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env["LOVABLE_API_KEY"]}`,
-      "X-Connection-Api-Key": process.env["NEON_API_KEY"] ?? "",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query: QUERY, params: [] }),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`${res.status}: ${text.slice(0, 400)}`);
-  return (JSON.parse(text) as { rows: AppliedMigration[] }).rows;
 }
 
 const dir = join(import.meta.dir, "..", "db");

@@ -1,23 +1,18 @@
 /** Explicit preview-only fixture. No bypass, no plaintext credentials in source or output. */
+import { sqlRequest } from "./db-direct";
 import { hashPassword } from "better-auth/crypto";
 import { randomUUID, randomBytes } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 if (!process.argv.includes("--preview")) throw new Error("Pass --preview only for an isolated preview database.");
-const apiKey = process.env.LOVABLE_API_KEY;
-const connectionKey = process.env.NEON_API_KEY;
-if (!apiKey || !connectionKey) throw new Error("Missing linked Neon credentials.");
-async function query(body: object) {
-  const response = await fetch("https://connector-gateway.lovable.dev/neon/sql", {
-    method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "X-Connection-Api-Key": connectionKey ?? "", "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({})) as { code?: string; message?: string };
+async function query(body: any): Promise<any> {
+  try {
+    return await sqlRequest(body);
+  } catch (e) {
+    const error = e as { code?: string; message?: string };
     const constraint = error.message?.match(/constraint "([a-z0-9_]+)"/i)?.[1];
-    throw new Error(`Preview seed failed (${response.status}, ${error.code ?? "unknown"}${constraint ? `, constraint ${constraint}` : ""}); no credentials logged.`);
+    throw new Error(`Preview seed failed (${error.code ?? "unknown"}${constraint ? `, constraint ${constraint}` : ""}); no credentials logged.`);
   }
-  return response.json();
 }
 const email = "test_preview@rout.be";
 const existing = await query({ query: 'select id from neon_auth."user" where lower(email) = $1 limit 1', params: [email] });
