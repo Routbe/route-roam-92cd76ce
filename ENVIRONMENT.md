@@ -279,4 +279,4 @@ Storage names are exactly those in "File storage (Scaleway)" above (`SCALEWAY_DE
 
 ## Build target
 
-`vite build` uses the standard TanStack Start + Nitro plugins. The server target comes from `NITRO_PRESET` (default `node-server`: run `node .output/server/index.mjs`, `PORT` sets the port; `vercel` and other Nitro presets also work). No hosting provider is assumed.
+`vite build` uses the standard TanStack Start + Nitro plugins. The server target comes from `NITRO_PRESET` (default `node-server`: run `node dist/server/index.mjs`, `PORT` sets the port; `vercel` and other Nitro presets also work). No hosting provider is assumed.
