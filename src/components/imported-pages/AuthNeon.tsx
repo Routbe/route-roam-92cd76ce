@@ -166,8 +166,10 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
         toast.error(res.error.message || t("auth.passkey.failed"));
         return;
       }
-      toast.success(t("auth.ui.toast.welcome"));
-      await refresh();
+      // Session cookie is set: go straight to the post-auth landing instead of waiting for a client refresh.
+      redirected.current = true;
+      window.location.replace(POST_AUTH_PATH);
+      return;
     } catch (err) {
       toast.error(errorMessage(err, t("auth.passkey.failed")));
     } finally {
@@ -186,8 +188,8 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
       try {
         const res = await authClient.signIn.passkey({ autoFill: true });
         if (cancelled || !res || res.error) return;
-        toast.success(t("auth.ui.toast.welcome"));
-        await refresh();
+        redirected.current = true;
+        window.location.replace(POST_AUTH_PATH);
       } catch {
         // Aborted or dismissed autofill: the explicit passkey button still works.
       }
