@@ -894,3 +894,9 @@ On the owner's decision the held-back booking ledger is now `db-pending/0284_boo
 - Read-back: 280 migrations; 0 foreign keys in `public` without a supporting index (was 47); 47 `*_fkx` indexes, 0 invalid indexes; PUBLIC and rout_app hold no EXECUTE on the four functions; triggers `on_user_created`, `profiles_early_verified_promo`, `trg_enforce_short_link_limits` still enabled; 0 SECURITY DEFINER functions off `pg_catalog, pg_temp`.
 - The file header says "Owner GO 2026-11-16" (the owner chose the work then); the explicit GO for the live write came on 2026-11-17. Left as is because the header is part of the recorded checksum.
 - Code and database are level at 0286; production reports 0286 after the next deploy on the owner's host.
+
+### Vercel Build Output (2026-11-17)
+- `vite.config.ts` takes its Nitro target from `scripts/nitro-target.ts`: `NITRO_PRESET`, else `vercel` when Vercel builds (`VERCEL` set), else `node-server`. Fixed: the Vercel build used to be forced into `dist/`, so `.vercel/output` never existed and Vercel would have found no Build Output.
+- Vercel output: `config.json` (version 3) routes `/assets/*` with immutable caching, then `handle: filesystem`, then `/(.*)` to `__server` (Node 22, about 36 MB, no symlinks). `/api/*` and app pages share that one function. The `vercel.json` crons are copied into `config.json`.
+- Verified locally: `/`, `/dashboard` and `/discover` return HTML 200, `/api/public/health` returns schema `0286`, and the cron route without a secret returns 503. `src/test/vercel-config.test.ts` guards this. A real Vercel deployment is still unverified.
+
