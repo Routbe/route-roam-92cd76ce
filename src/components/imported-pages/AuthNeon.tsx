@@ -76,7 +76,7 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
   const { t } = useTranslation();
   const { locale } = useI18n();
   const adminPortal = Boolean(usePortalFrame()) || isAdminMode();
-  const { user, refresh } = useAuth();
+  const { user } = useAuth();
 
   const [mode, setMode] = useState<Mode>(adminPortal && initialMode === "signup" ? "signin" : initialMode);
   const [email, setEmail] = useState("");
