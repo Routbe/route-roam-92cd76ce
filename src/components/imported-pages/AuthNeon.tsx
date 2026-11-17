@@ -76,7 +76,7 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
   const { t } = useTranslation();
   const { locale } = useI18n();
   const adminPortal = Boolean(usePortalFrame()) || isAdminMode();
-  const { user, refresh } = useAuth();
+  const { user } = useAuth();
 
   const [mode, setMode] = useState<Mode>(adminPortal && initialMode === "signup" ? "signin" : initialMode);
   const [email, setEmail] = useState("");
@@ -155,6 +155,12 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
     setEmailError(message);
     toast.error(message);
     return false;
+  };
+
+  /** Session cookie is set server-side: one full load to /auth/continue, which re-checks it and 303s. */
+  const goToPostAuth = () => {
+    redirected.current = true;
+    window.location.replace(POST_AUTH_PATH);
   };
 
   const passkeyLogin = async () => {
@@ -276,7 +282,7 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
       }
       await enrollPasskey(result.data["ticket"] as string, "ROUT");
       toast.success(minor ? t("auth.pk.welcomeMinor") : t("auth.ui.toast.welcome"));
-      await refresh();
+      goToPostAuth();
     } catch (err) {
       const code = (err as { code?: string }).code;
       toast.error(code === "account_exists" || /account_exists/.test(String((err as Error).message)) ? t("auth.pk.accountExists") : errorMessage(err, t("auth.pk.failed")));
@@ -311,7 +317,7 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
       await enrollPasskey(`rq.${recoveryToken}`, "ROUT");
       setRecoveryToken(null);
       toast.success(t("auth.pk.recovered"));
-      await refresh();
+      goToPostAuth();
     } catch (err) {
       toast.error(/recovery_token_invalid/.test(String((err as Error).message)) ? t("auth.pk.tokenInvalid") : errorMessage(err, t("auth.pk.failed")));
     } finally {
@@ -397,7 +403,7 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
           {mode === "signin" && step === "second" && (
             <SecondFactorStep
               allowTrust={!adminPortal}
-              onDone={refresh}
+              onDone={goToPostAuth}
               onRestart={() => setStep("choose")}
             />
           )}
