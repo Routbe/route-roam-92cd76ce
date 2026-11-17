@@ -76,7 +76,7 @@ use the editor.
 - The free `rout_server` policies from db/0154 are removed table by table, only after every runtime read/write is moved into the owner's context or a narrow SECURITY DEFINER function; account purge deletes rely on `public.rout_purge_due(user_id)`. Why: dropping them all at once stops sign-in, payments and admin, and the purge runs without a member context.
 
 ## Neon database access
-- Runtime DB = DATABASE_URL only (postgres driver, TLS forced); scripts use scripts/db-direct.ts; build targets NITRO_PRESET (default node-server). Why: owner runs on own infrastructure, no vendor path.
+- Runtime DB = DATABASE_URL only (postgres driver, TLS forced); scripts use scripts/db-direct.ts; build target from scripts/nitro-target.ts (NITRO_PRESET, else vercel on Vercel, else node-server); Vercel routing/crons live only in Nitro's .vercel/output/config.json, never as vercel.json rewrites. Why: owner runs on own infrastructure, no vendor path.
 
 ## Migration history
 - Every row in public.schema_migrations must match a file in db/ or an entry in scripts/migration-history-allowlist.ts carrying Neon's exact checksum; check with scripts/migration-history-check.ts and never rewrite Neon's rows. Why: history drift stays visible without falsifying what actually ran.
