@@ -157,6 +157,12 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
     return false;
   };
 
+  /** Session cookie is set server-side: one full load to /auth/continue, which re-checks it and 303s. */
+  const goToPostAuth = () => {
+    redirected.current = true;
+    window.location.replace(POST_AUTH_PATH);
+  };
+
   const passkeyLogin = async () => {
     if (unavailable) { toast.error(AUTH_UNAVAILABLE_TEXT[locale]); return; }
     setLoading(true);
@@ -276,7 +282,7 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
       }
       await enrollPasskey(result.data["ticket"] as string, "ROUT");
       toast.success(minor ? t("auth.pk.welcomeMinor") : t("auth.ui.toast.welcome"));
-      await refresh();
+      goToPostAuth();
     } catch (err) {
       const code = (err as { code?: string }).code;
       toast.error(code === "account_exists" || /account_exists/.test(String((err as Error).message)) ? t("auth.pk.accountExists") : errorMessage(err, t("auth.pk.failed")));
@@ -311,7 +317,7 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
       await enrollPasskey(`rq.${recoveryToken}`, "ROUT");
       setRecoveryToken(null);
       toast.success(t("auth.pk.recovered"));
-      await refresh();
+      goToPostAuth();
     } catch (err) {
       toast.error(/recovery_token_invalid/.test(String((err as Error).message)) ? t("auth.pk.tokenInvalid") : errorMessage(err, t("auth.pk.failed")));
     } finally {
@@ -397,7 +403,7 @@ export default function AuthNeon({ initialMode = "signin", initialProviders = nu
           {mode === "signin" && step === "second" && (
             <SecondFactorStep
               allowTrust={!adminPortal}
-              onDone={refresh}
+              onDone={goToPostAuth}
               onRestart={() => setStep("choose")}
             />
           )}
