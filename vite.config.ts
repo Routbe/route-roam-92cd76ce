@@ -12,8 +12,8 @@ import mdx from "@mdx-js/rollup";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { nitroTarget, vercelCrons } from "./scripts/nitro-target";
+import { readdirSync, readFileSync } from "node:fs";
+import { nitroTarget } from "./scripts/nitro-target";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
 
@@ -75,7 +75,7 @@ export default defineConfig(({ command, mode }) => {
         // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
         server: { entry: "server" },
       }),
-      ...(command === "build" ? [nitro(nitroTarget(process.env, existsSync("vercel.json") ? vercelCrons(JSON.parse(readFileSync("vercel.json", "utf8"))) : []))] : []),
+      ...(command === "build" ? [nitro(nitroTarget(process.env))] : []),
       viteReact(),
       docsCatalogPlugin,
       mdx({ include: /\.mdx$/, providerImportSource: "@mdx-js/react", remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm] }),

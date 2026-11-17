@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from "vitest";
-import { validateReleaseEnvironment } from "../../scripts/release-config";
+import { releaseEnvironmentWarnings, validateReleaseEnvironment, withReleaseDefaults } from "../../scripts/release-config";
 
 const configured = () => ({
   DATABASE_URL: "postgresql://test.example/app", PUBLIC_ORIGIN: "https://rout.be",
@@ -24,4 +24,19 @@ it("accepts HTTPS URLs including trailing slash, paths and queries", () => {
 it("does not require unrelated release settings", () => {
   expect(validateReleaseEnvironment({ ...configured(), VITE_APP_MODE: "public", APP_MODE: "admin" }))
     .toEqual([]);
+});it("falls back to https://rout.be when PUBLIC_ORIGIN is missing", () => {
+  const env = withReleaseDefaults({ DATABASE_URL: configured().DATABASE_URL });
+  expect(env.PUBLIC_ORIGIN).toBe("https://rout.be");
+  expect(validateReleaseEnvironment(env)).toEqual([]);
+  expect(releaseEnvironmentWarnings(env)).toEqual([]);
+});
+it("falls back to https://rout.be when PUBLIC_ORIGIN is not a credential-free HTTPS URL", () => {
+  for (const PUBLIC_ORIGIN of ["rout.be", "http://rout.be", "https://user:pw@rout.be"]) {
+    const env = withReleaseDefaults({ ...configured(), PUBLIC_ORIGIN });
+    expect(env.PUBLIC_ORIGIN, PUBLIC_ORIGIN).toBe("https://rout.be");
+    expect(releaseEnvironmentWarnings(env)).toEqual([]);
+  }
+});
+it("keeps a valid configured PUBLIC_ORIGIN", () => {
+  expect(withReleaseDefaults({ ...configured(), PUBLIC_ORIGIN: "https://rout.dlp.li" }).PUBLIC_ORIGIN).toBe("https://rout.dlp.li");
 });
