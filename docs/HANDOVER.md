@@ -897,6 +897,6 @@ On the owner's decision the held-back booking ledger is now `db-pending/0284_boo
 
 ### Vercel Build Output (2026-11-17)
 - `vite.config.ts` takes its Nitro target from `scripts/nitro-target.ts`: `NITRO_PRESET`, else `vercel` when Vercel builds (`VERCEL` set), else `node-server`. Fixed: the Vercel build used to be forced into `dist/`, so `.vercel/output` never existed and Vercel would have found no Build Output.
-- Vercel output: `config.json` (version 3) routes `/assets/*` with immutable caching, then `handle: filesystem`, then `/(.*)` to `__server` (Node 22, about 36 MB, no symlinks). `/api/*` and app pages share that one function. The `vercel.json` crons are copied into `config.json`.
+- Vercel output: `config.json` (version 3) routes `/assets/*` with immutable caching, then `handle: filesystem`, then `/(.*)` to `__server` (Node 22, about 36 MB, no symlinks). `/api/*` and app pages share that one function. Crons stay only in `vercel.json`; Vercel merges them itself, so copying them into `config.json` caused a "duplicated cron job" build error and was removed (Nov 2026). The release check falls back to `https://rout.be` for a missing or invalid `PUBLIC_ORIGIN`.
 - Verified locally: `/`, `/dashboard` and `/discover` return HTML 200, `/api/public/health` returns schema `0286`, and the cron route without a secret returns 503. `src/test/vercel-config.test.ts` guards this. A real Vercel deployment is still unverified.
 
