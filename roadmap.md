@@ -327,7 +327,8 @@
 
 ## Owner directive 2026-11-16 23:20 — after live Neon audit (HANDOVER appendix)
 - [x] A3 + A2: db/0286 written + offline tested (47 FK indexes, trigger-only definers closed, rollback in db-pending), schema level 0286
-- [ ] GO owner: apply 0286 on Neon via scripts/migration-rollout.ts — app code now reports 0286, so deploy only after it is live
+- [x] 0286 live on Neon (owner GO 2026-11-17 09:05 UTC, checksum verified in-transaction, 0 unindexed FKs left)
+- [ ] Redeploy production on the owner's host so the health probe reports 0286 — owner
 - [x] Workspace manager inbox on workspace settings: key init/rotate (atomic), list, decrypt in worker, private reply, publish to FAQ, decline (nl/en/fr/de, offline SQL test)
 - [ ] Inbox: share the workspace key with other owners/admins — needs a published device public key per member (no such registry yet; owner decision)
 - [ ] Inbox live click-through — needs DATABASE_URL in an environment
