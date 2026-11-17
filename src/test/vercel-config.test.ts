@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { existsSync, readFileSync } from "node:fs";
 import { expect, it } from "vitest";
-import { nitroTarget, vercelCrons } from "../../scripts/nitro-target";
+import { nitroTarget } from "../../scripts/nitro-target";
 
 const vercelJson = JSON.parse(readFileSync("vercel.json", "utf8"));
 
@@ -30,13 +30,17 @@ it("declares no routing or headers in vercel.json, because .vercel/output/config
     expect(vercelJson[key], key).toBeUndefined();
   }
 });
-it("copies every vercel.json cron into the generated config, each backed by a route file", () => {
-  const crons = vercelCrons(vercelJson);
-  expect(crons).toEqual(vercelJson.crons);
-  const target = nitroTarget({ VERCEL: "1" }, crons);
-  expect("vercel" in target && target.vercel.config.crons).toEqual(crons);
-  for (const { path } of crons) {
+it("declares the cleanup cron exactly once, only in vercel.json, backed by a route file", () => {
+  const cleanup = vercelJson.crons.filter((c: { path: string }) => c.path === "/api/public/cron/cleanup-assets");
+  expect(cleanup).toEqual([{ path: "/api/public/cron/cleanup-assets", schedule: "0 3 * * *" }]);
+  const keys = vercelJson.crons.map((c: { path: string; schedule: string }) => `${c.schedule} ${c.path}`);
+  expect(new Set(keys).size).toBe(keys.length);
+  for (const { path } of vercelJson.crons as { path: string }[]) {
     const file = `src/routes/${path.slice(1).replace("api/public/", "api_.public.").replaceAll("/", ".")}.ts`;
     expect(existsSync(file), file).toBe(true);
   }
+});
+it("never copies crons into the generated Build Output config, because Vercel merges vercel.json crons itself", () => {
+  const target = nitroTarget({ VERCEL: "1" });
+  expect("vercel" in target && "crons" in target.vercel.config).toBe(false);
 });
