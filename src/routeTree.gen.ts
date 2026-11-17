@@ -105,6 +105,7 @@ import { Route as AboutSovereigntyRouteImport } from './routes/about.sovereignty
 import { Route as AboutUsernamesRouteImport } from './routes/about.usernames'
 import { Route as AccountAccountViewRouteImport } from './routes/account.$accountView'
 import { Route as ApiClaimRootRouteImport } from './routes/api/claim-root'
+import { Route as ApiHealthRouteImport } from './routes/api_.health'
 import { Route as ApiMcpRouteImport } from './routes/api_.mcp'
 import { Route as ApiPaymentStatusRouteImport } from './routes/api_.payment-status'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
@@ -931,6 +932,11 @@ const ApiClaimRootRoute = ApiClaimRootRouteImport.update({
   id: '/claim-root',
   path: '/claim-root',
   getParentRoute: () => ApiRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api_/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpRoute = ApiMcpRouteImport.update({
   id: '/api_/mcp',
@@ -2857,6 +2863,7 @@ export interface FileRoutesByFullPath {
   '/about/usernames': typeof AboutUsernamesRoute
   '/account/$accountView': typeof AccountAccountViewRoute
   '/api/claim-root': typeof ApiClaimRootRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/mcp': typeof ApiMcpRoute
   '/api/payment-status': typeof ApiPaymentStatusRoute
   '/auth/$authView': typeof AuthAuthViewRoute
@@ -3282,6 +3289,7 @@ export interface FileRoutesByTo {
   '/about/usernames': typeof AboutUsernamesRoute
   '/account/$accountView': typeof AccountAccountViewRoute
   '/api/claim-root': typeof ApiClaimRootRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/mcp': typeof ApiMcpRoute
   '/api/payment-status': typeof ApiPaymentStatusRoute
   '/auth/$authView': typeof AuthAuthViewRoute
@@ -3720,6 +3728,7 @@ export interface FileRoutesById {
   '/about/usernames': typeof AboutUsernamesRoute
   '/account/$accountView': typeof AccountAccountViewRoute
   '/api/claim-root': typeof ApiClaimRootRoute
+  '/api_/health': typeof ApiHealthRoute
   '/api_/mcp': typeof ApiMcpRoute
   '/api_/payment-status': typeof ApiPaymentStatusRoute
   '/auth/$authView': typeof AuthAuthViewRoute
@@ -4161,6 +4170,7 @@ export interface FileRouteTypes {
     | '/about/usernames'
     | '/account/$accountView'
     | '/api/claim-root'
+    | '/api/health'
     | '/api/mcp'
     | '/api/payment-status'
     | '/auth/$authView'
@@ -4586,6 +4596,7 @@ export interface FileRouteTypes {
     | '/about/usernames'
     | '/account/$accountView'
     | '/api/claim-root'
+    | '/api/health'
     | '/api/mcp'
     | '/api/payment-status'
     | '/auth/$authView'
@@ -5023,6 +5034,7 @@ export interface FileRouteTypes {
     | '/about/usernames'
     | '/account/$accountView'
     | '/api/claim-root'
+    | '/api_/health'
     | '/api_/mcp'
     | '/api_/payment-status'
     | '/auth/$authView'
@@ -5443,6 +5455,7 @@ export interface RootRouteChildren {
   DotwellKnownRoutAgentDotjsonRoute: typeof DotwellKnownRoutAgentDotjsonRoute
   APublicIdRoute: typeof APublicIdRoute
   AccountAccountViewRoute: typeof AccountAccountViewRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiMcpRoute: typeof ApiMcpRoute
   ApiPaymentStatusRoute: typeof ApiPaymentStatusRoute
   AuthConfirmEmailChangeRoute: typeof AuthConfirmEmailChangeRoute
@@ -6283,6 +6296,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/claim-root'
       preLoaderRoute: typeof ApiClaimRootRouteImport
       parentRoute: typeof ApiRoute
+    }
+    '/api_/health': {
+      id: '/api_/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api_/mcp': {
       id: '/api_/mcp'
@@ -9378,6 +9398,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotwellKnownRoutAgentDotjsonRoute: DotwellKnownRoutAgentDotjsonRoute,
   APublicIdRoute: APublicIdRoute,
   AccountAccountViewRoute: AccountAccountViewRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiMcpRoute: ApiMcpRoute,
   ApiPaymentStatusRoute: ApiPaymentStatusRoute,
   AuthConfirmEmailChangeRoute: AuthConfirmEmailChangeRoute,

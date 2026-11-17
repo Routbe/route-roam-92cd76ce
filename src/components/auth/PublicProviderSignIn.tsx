@@ -32,7 +32,7 @@ export function PublicProviderSignIn({ configured, readiness, disabled }: { conf
       {AUTH_PROVIDERS.map(provider => {
         const available = providerAvailable(provider.id, configured, readiness);
         return <Button key={provider.id} type="button" variant="outline" size="icon" aria-label={t("auth.provider.continue", { name: provider.label })}
-          className={`h-11 w-11 rounded-xl ${provider.id === "google" ? "google-sign-in" : ""}`} disabled={disabled || busy !== null || !available}
+          className={`h-11 w-11 rounded-xl`} disabled={disabled || busy !== null || !available}
           title={!available ? t("auth.provider.config", { name: provider.label }) : provider.label}
           onClick={() => void signIn(provider)}>
           {busy === provider.id ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <ProviderMark id={provider.id} />}
@@ -42,7 +42,7 @@ export function PublicProviderSignIn({ configured, readiness, disabled }: { conf
     <div className="hidden space-y-2 md:block">
     {AUTH_PROVIDERS.map(provider => {
       const available = providerAvailable(provider.id, configured, readiness);
-      return <Button key={provider.id} type="button" variant="outline" className={`min-h-11 w-full justify-start gap-2.5 px-3 text-sm ${provider.id === "google" ? "google-sign-in" : ""}`} disabled={disabled || busy !== null || !available}
+      return <Button key={provider.id} type="button" variant="outline" className={`min-h-11 w-full justify-start gap-2.5 px-3 text-sm`} disabled={disabled || busy !== null || !available}
         title={!available ? t("auth.provider.config", { name: provider.label }) : undefined}
         onClick={() => void signIn(provider)}>
         {busy === provider.id ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <ProviderMark id={provider.id} />}
