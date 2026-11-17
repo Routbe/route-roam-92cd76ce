@@ -9,7 +9,7 @@ export function nitroTarget(env: Record<string, string | undefined>, crons: Verc
   if (preset !== "vercel") return { ...base, output: { dir: "dist" } };
   // No output override: the preset's .vercel/output is the only place Vercel looks.
   // Node runtime is pinned so a Bun-driven build never switches functions to Bun.
-  return { ...base, vercel: { functions: { runtime: "nodejs22.x" }, config: { crons } } };
+  return { ...base, vercel: { functions: { runtime: "nodejs22.x" }, config: { version: 3 as const, crons } } };
 }
 
 /** Crons are declared once in vercel.json and copied into .vercel/output/config.json. */
